@@ -1,0 +1,3 @@
+keystoneauth1
+python-keystoneclient
+python-swiftclient
