@@ -60,6 +60,9 @@ OS_IDENTITY_PROVIDER_URL = 'https://kc.cscs.ch/auth/realms/cscs/protocol/saml/'
 
 
 class File(object):
+    """
+    A representation of a file in a container.
+    """
 
     def __init__(self, name, bytes, content_type, hash, last_modified):
         self.name = name
@@ -84,6 +87,11 @@ class File(object):
     
 
 class Container(object):
+    """
+    A representation of a storage container, 
+    with methods for listing, counting, downloading, etc.
+    the files it contains.
+    """
     
     def __init__(self, container, username, token=None, project=None):
         if project is None:
@@ -120,7 +128,7 @@ class Container(object):
         return int(headers['x-container-bytes-used'])/scale
     
     def download(self, file_path, local_directory="."):
-        """ """
+        """Download a file from the container"""
         headers, contents = self.project._connection.get_object(self.name, file_path)
         local_directory = os.path.join(os.path.abspath(local_directory),
                                        *os.path.dirname(file_path).split("/"))
@@ -132,6 +140,11 @@ class Container(object):
 
 
 class Project(object):
+    """
+    A representation of a Project,
+    with methods for listing containers and users
+    associated with that project.
+    """
     
     def __init__(self, project, username, token=None, archive=None):
         if archive is None:
@@ -165,9 +178,9 @@ class Project(object):
 
     @property
     def containers(self):
-        """ """
         return {name: Container(name, username=self.archive.username, project=self)
                 for name in self.container_names if not name.endswith("_versions")}
+        """Containers you have access to in this project."""
 
     @property
     def container_names(self):
@@ -175,7 +188,11 @@ class Project(object):
 
 
 class Archive(object):
-    """ """
+    """
+    A representation of the Human Brain Project archival storage (Pollux SWIFT) at CSCS,
+    with methods for listing the projects you are associated with,
+    and for searching for containers by name.
+    """
 
     def __init__(self, username, token=None):
         self.username = username
@@ -199,6 +216,7 @@ class Archive(object):
             
     @property
     def projects(self):
+        """Projects you have access to"""
         if self._projects is None:
             self._projects = {ksprj_name: Project(ksprj_name, username=self.username, archive=self)
                               for ksprj_name in self._ks_projects}
