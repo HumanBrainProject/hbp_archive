@@ -146,6 +146,18 @@ class Container(object):
         return local_path
         # todo: check hash
 
+    def read(self, file_path, decode='utf-8', accept=[]):
+        """Read and return the contents of a file in the container"""
+        text_content_types = ["application/json", ]
+        headers, contents = self.project._connection.get_object(self.name, file_path)
+        # todo: check hash
+        content_type = headers["content-type"]
+        ct_parts = content_type.split("/")
+        if (ct_parts[0] == "text" or content_type in text_content_types or content_type in accept) and decode:
+            return contents.decode(decode)
+        else:
+            return contents
+    
 
 class Project(object):
     """
