@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='hbp_archive',
-    version='0.1.0',
+    version='0.2.0',
     description='A high-level API for interacting with the Human Brain Project archival storage at CSCS',  # Required
     long_description=long_description,
     url='https://github.com/apdavison/hbp_archive',

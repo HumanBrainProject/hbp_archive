@@ -52,7 +52,7 @@ from keystoneclient.v3 import client as ksclient
 import swiftclient.client as swiftclient
 from swiftclient.exceptions import ClientException
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
@@ -158,6 +158,34 @@ class Container(object):
         else:
             return contents
     
+    def access_control(self, show_usernames=True):
+        """List the users that have access to this container."""
+        acl = {}
+        for key in ("read", "write"):
+            item = self.metadata.get('x-container-{}'.format(key), [])
+            if item:
+                item = item.split(",")
+            acl[key] = item
+        if show_usernames:  # map user id to username
+            user_id_map = self.project.users
+            for key in ("read", "write"): 
+                user_ids = [item.split(":")[1] for item in acl[key]]  # each item is "project:user_id"
+                acl[key] = [user_id_map[user_id] for user_id in user_ids]
+        return acl
+
+    def grant_access(self, username, mode='read'):
+        """
+        Give read or write access to the given user.
+        
+        Use restricted to Superusers/Operators.
+        """
+        name_map = {v: k for k, v in self.project.users.items()}
+        user_id = name_map[username]
+        new_acl = self.access_control(show_usernames=False)[mode] + ["{}:{}".format(self.project.id, user_id)]
+        headers = {"x-container-{}".format(mode): ",".join(new_acl)}
+        response = self.project._connection.post_container(self.name, headers)
+        self._metadata = None  # needs to be refreshed
+
 
 class Project(object):
     """
@@ -176,6 +204,7 @@ class Project(object):
         self._session = None
         self._connection = None
         self._containers = None
+        self._user_id_map = None
 
     def __str__(self):
         return self.name
@@ -208,6 +237,23 @@ class Project(object):
     @property
     def container_names(self):
         return [item['name'] for item in self._get_container_info()]
+
+    @property
+    def users(self):
+        """Return a mapping from usernames to user ids"""
+        if self._user_id_map is None:
+            proj_info = self.containers['project_info']
+            user_id_doc = proj_info.read('user_ids', accept=['application/octet-stream'])
+            self._user_id_map = {}
+            in_user_list = False
+            for line in user_id_doc.split("\n"):
+                if line:
+                    if line.startswith("# user ids"):
+                        in_user_list = True
+                    elif in_user_list:
+                        user_id, username = line.split(" ")
+                        self._user_id_map[user_id] = username
+        return self._user_id_map
 
 
 class Archive(object):
