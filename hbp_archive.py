@@ -72,10 +72,10 @@ class File(object):
         self.last_modified = last_modified
     
     def __str__(self):
-        return self.name
+        return "'{}'".format(self.name)
 
     def __repr__(self):
-        return self.name
+        return "'{}'".format(self.name)
 
     @property
     def dirname(self):
@@ -99,18 +99,26 @@ class Container(object):
             project = archive.find_container(container)
         self.project = project
         self.name = container
+        self._metadata = None
 
     def __str__(self):
-        return "{}/{}".format(self.project, self.name)
+        return "'{}/{}'".format(self.project, self.name)
+
+    @property
+    def metadata(self):
+        """Metadata about the container"""
+        if self._metadata is None:
+            self._metadata = self.project._connection.head_container(self.name)
+        return self._metadata
 
     def list(self):  #, content_type=None, newer_than=None, older_than=None):
-        headers, contents = self.project._connection.get_container(self.name)
+        """List all files in the container."""
+        self._metadata, contents = self.project._connection.get_container(self.name)
         return [File(**item) for item in contents]
     
     def count(self):
         """Number of files in the container"""
-        headers = self.project._connection.head_container(self.name)
-        return int(headers['x-container-object-count'])
+        return int(self.metadata['x-container-object-count'])
 
     def size(self, units='bytes'):
         """Total size of all data in the container"""
@@ -123,10 +131,9 @@ class Container(object):
         }
         if units not in allowed_units:
             raise ValueError("Units must be one of {}".format(list(allowed_units.keys())))
-        headers = self.project._connection.head_container(self.name)
         scale = allowed_units[units]
-        return int(headers['x-container-bytes-used'])/scale
-    
+        return int(self.metadata['x-container-bytes-used'])/scale
+
     def download(self, file_path, local_directory="."):
         """Download a file from the container"""
         headers, contents = self.project._connection.get_object(self.name, file_path)
@@ -136,6 +143,7 @@ class Container(object):
         local_path = os.path.join(local_directory, os.path.basename(file_path))
         with open(local_path, 'wb') as local:
             local.write(contents)
+        return local_path
         # todo: check hash
 
 
