@@ -163,6 +163,7 @@ class Project(object):
         self.name = ks_project.name
         self._session = None
         self._connection = None
+        self._containers = None
 
     def __str__(self):
         return self.name
@@ -186,9 +187,11 @@ class Project(object):
 
     @property
     def containers(self):
-        return {name: Container(name, username=self.archive.username, project=self)
-                for name in self.container_names if not name.endswith("_versions")}
         """Containers you have access to in this project."""
+        if self._containers is None:
+            self._containers = {name: Container(name, username=self.archive.username, project=self)
+                                for name in self.container_names if not name.endswith("_versions")}
+        return self._containers
 
     @property
     def container_names(self):
