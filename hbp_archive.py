@@ -41,6 +41,10 @@ Usage:
     projects = archive.projects
     container = archive.find_container("MyContainer")  # will search through all projects
 
+    # Reading a file directly, without downloading it
+
+    with container.open("my_data.txt") as fp:
+        data = np.loadtxt(fp)
 
 """
 
@@ -158,6 +162,14 @@ class Container(object):
         else:
             return contents
     
+    def delete(self, file_path):
+        """ """
+        try:
+            self.project._connection.delete_object(self.name, file_path)
+            print("Successfully deleted the object")
+        except ClientException as e:
+            print("Failed to delete the object with error: %s" % e)
+
     def access_control(self, show_usernames=True):
         """List the users that have access to this container."""
         acl = {}
@@ -168,9 +180,17 @@ class Container(object):
             acl[key] = item
         if show_usernames:  # map user id to username
             user_id_map = self.project.users
-            for key in ("read", "write"): 
-                user_ids = [item.split(":")[1] for item in acl[key]]  # each item is "project:user_id"
-                acl[key] = [user_id_map[user_id] for user_id in user_ids]
+            for key in ("read", "write"):
+                is_public = False
+                user_ids = []
+                for item in acl[key]:
+                    if item in ('.r:*', '.rlistings'):
+                        is_public = True
+                    else:
+                        user_ids.append(item.split(":")[1])  # each item is "project:user_id"
+                acl[key] = [user_id_map.get(user_id, user_id) for user_id in user_ids]
+                if is_public:
+                    acl[key].append("PUBLIC")
         return acl
 
     def grant_access(self, username, mode='read'):
