@@ -48,7 +48,8 @@ Usage:
 
 """
 
-import getpass, os
+import getpass
+import os
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
 from keystoneauth1.extras._saml2 import V3Saml2Password
@@ -56,7 +57,7 @@ from keystoneclient.v3 import client as ksclient
 import swiftclient.client as swiftclient
 from swiftclient.exceptions import ClientException
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
@@ -74,7 +75,7 @@ class File(object):
         self.content_type = content_type
         self.hash = hash
         self.last_modified = last_modified
-    
+
     def __str__(self):
         return "'{}'".format(self.name)
 
@@ -88,15 +89,15 @@ class File(object):
     @property
     def basename(self):
         return os.path.basename(self.name)
-    
+
 
 class Container(object):
     """
-    A representation of a storage container, 
+    A representation of a storage container,
     with methods for listing, counting, downloading, etc.
     the files it contains.
     """
-    
+
     def __init__(self, container, username, token=None, project=None):
         if project is None:
             archive = Archive(username, token=token)
@@ -121,11 +122,11 @@ class Container(object):
             self._metadata = self.project._connection.head_container(self.name)
         return self._metadata
 
-    def list(self):  #, content_type=None, newer_than=None, older_than=None):
+    def list(self):  # , content_type=None, newer_than=None, older_than=None):
         """List all files in the container."""
         self._metadata, contents = self.project._connection.get_container(self.name)
         return [File(**item) for item in contents]
-    
+
     def count(self):
         """Number of files in the container"""
         return int(self.metadata['x-container-object-count'])
@@ -142,7 +143,7 @@ class Container(object):
         if units not in allowed_units:
             raise ValueError("Units must be one of {}".format(list(allowed_units.keys())))
         scale = allowed_units[units]
-        return int(self.metadata['x-container-bytes-used'])/scale
+        return int(self.metadata['x-container-bytes-used']) / scale
 
     def download(self, file_path, local_directory="."):
         """Download a file from the container"""
@@ -168,7 +169,7 @@ class Container(object):
             return contents.decode(decode)
         else:
             return contents
-    
+
     def delete(self, file_path):
         """ """
         try:
@@ -197,18 +198,19 @@ class Container(object):
                         user_ids.append(item.split(":")[1])  # each item is "project:user_id"
                 acl[key] = [user_id_map.get(user_id, user_id) for user_id in user_ids]
                 if is_public:
-                    acl[key].append("PUBLIC")   
+                    acl[key].append("PUBLIC")
         return acl
 
     def grant_access(self, username, mode='read'):
         """
         Give read or write access to the given user.
-        
+
         Use restricted to Superusers/Operators.
         """
         name_map = {v: k for k, v in self.project.users.items()}
         user_id = name_map[username]
-        new_acl = self.access_control(show_usernames=False)[mode] + ["{}:{}".format(self.project.id, user_id)]
+        new_acl = self.access_control(show_usernames=False)[
+            mode] + ["{}:{}".format(self.project.id, user_id)]
         headers = {"x-container-{}".format(mode): ",".join(new_acl)}
         response = self.project._connection.post_container(self.name, headers)
         self._metadata = None  # needs to be refreshed
@@ -220,7 +222,7 @@ class Project(object):
     with methods for listing containers and users
     associated with that project.
     """
-    
+
     def __init__(self, project, username, token=None, archive=None):
         if archive is None:
             archive = Archive(username, token=token)
@@ -240,8 +242,8 @@ class Project(object):
         return "Project('{}', username='{}')".format(self.name, self.archive.username)
 
     def _set_scope(self):
-        auth = v3.Token(auth_url=OS_AUTH_URL, 
-                        token=self.archive._session.get_token(), 
+        auth = v3.Token(auth_url=OS_AUTH_URL,
+                        token=self.archive._session.get_token(),
                         project_id=self.id)
         self._session = session.Session(auth=auth)
 
@@ -305,22 +307,22 @@ class Archive(object):
         self.username = username
         if token:
             auth = v3.Token(auth_url=OS_AUTH_URL, token=token)
-        else: 
+        else:
             pwd = getpass.getpass("Password: ")
-            auth = V3Saml2Password(auth_url=OS_AUTH_URL, 
+            auth = V3Saml2Password(auth_url=OS_AUTH_URL,
                                    identity_provider=OS_IDENTITY_PROVIDER,
-                                   protocol='mapped', 
-                                   identity_provider_url=OS_IDENTITY_PROVIDER_URL, 
-                                   username=username, 
+                                   protocol='mapped',
+                                   identity_provider_url=OS_IDENTITY_PROVIDER_URL,
+                                   username=username,
                                    password=pwd)
 
         self._session = session.Session(auth=auth)
-        self._client  = ksclient.Client(session=self._session, interface='public')
+        self._client = ksclient.Client(session=self._session, interface='public')
         self.user_id = self._session.get_user_id()
-        self._ks_projects = {ksprj.name: ksprj 
+        self._ks_projects = {ksprj.name: ksprj
                              for ksprj in self._client.projects.list(user=self.user_id)}
         self._projects = None
-            
+
     @property
     def projects(self):
         """Projects you have access to"""
@@ -334,7 +336,7 @@ class Archive(object):
         Search through all projects for the container with the given name.
 
         Return a Container object.
-        
+
         If the container is not found, raise an Exception
         """
         for project in self.projects.values():
@@ -342,4 +344,5 @@ class Archive(object):
                 return project.get_container(container)
             except ClientException:
                 pass
-        raise ValueError("Container {} not found. Please check your access permissions.".format(container))
+        raise ValueError(
+            "Container {} not found. Please check your access permissions.".format(container))

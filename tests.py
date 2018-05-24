@@ -24,7 +24,6 @@ from unittest import TestCase
 from hbp_archive import Archive, Project, Container
 
 
-
 class ArchiveTest(TestCase):
 
     @classmethod
@@ -36,7 +35,8 @@ class ArchiveTest(TestCase):
 
     def test_project_list(self):
         projects = self.arch.projects
-        self.assertEqual(sorted([p.name for p in projects.values()]), ["bp0", "bp00sp01", "bp00sp06"])
+        self.assertEqual(sorted([p.name for p in projects.values()]),
+                         ["bp0", "bp00sp01", "bp00sp06"])
 
     def test_find_container(self):
         container_name = "sp6_validation_data"
@@ -56,12 +56,12 @@ class ProjectTest(TestCase):
         getpw.return_value = os.environ["HBP_ARCHIVE_PASSWORD"]
         username = os.environ["HBP_ARCHIVE_USERNAME"]
         cls.prj = Project("bp00sp06", username)
-    
+
     def test_repr(self):
         self.assertEqual(self.prj.name, "bp00sp06")
         self.assertEqual(str(self.prj), "bp00sp06")
-        self.assertEqual(repr(self.prj), 
-                         "Project('{}', username='{}')".format(self.prj.name, 
+        self.assertEqual(repr(self.prj),
+                         "Project('{}', username='{}')".format(self.prj.name,
                                                                self.prj.archive.username))
 
     def test_users(self):
@@ -76,19 +76,19 @@ class ContainerTest(TestCase):
         getpw.return_value = os.environ["HBP_ARCHIVE_PASSWORD"]
         username = os.environ["HBP_ARCHIVE_USERNAME"]
         cls.container = Container("sp6_validation_data", username)
-    
+
     def test_repr(self):
         self.assertEqual(repr(self.container),
                          "Container('{}', project='{}', username='{}')".format(
-                            self.container.name, 
-                            self.container.project.name, 
-                            self.container.project.archive.username))
+            self.container.name,
+            self.container.project.name,
+            self.container.project.archive.username))
         self.assertEqual(str(self.container),
-                         "'{}/{}'".format(self.container.project, self.container.name) )
+                         "'{}/{}'".format(self.container.project, self.container.name))
 
     def test_list(self):
         self.assertIn("README.txt", [f.name for f in self.container.list()])
-        
+
     def test_count(self):
         self.assertGreater(self.container.count(), 0)
 
