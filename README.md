@@ -17,8 +17,8 @@ Usage:
 
     # Working with a project
 
-    sp6 = Project('MyProject', username="xyzabc")
-    containers = sp6.containers
+    my_proj = Project('MyProject', username="xyzabc")
+    container = my_proj.get_container("MyContainer")
 
     # Listing all your projects
 

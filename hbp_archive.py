@@ -1,4 +1,4 @@
-# Copyright (c) 2017 CNRS
+# Copyright (c) 2017-2018 CNRS
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -100,13 +100,19 @@ class Container(object):
     def __init__(self, container, username, token=None, project=None):
         if project is None:
             archive = Archive(username, token=token)
-            project = archive.find_container(container)
+            project = archive.find_container(container).project
+        elif isinstance(project, str):
+            project = Project(project, username=username, token=token)
         self.project = project
         self.name = container
         self._metadata = None
 
     def __str__(self):
         return "'{}/{}'".format(self.project, self.name)
+
+    def __repr__(self):
+        return "Container('{}', project='{}', username='{}')".format(
+            self.name, self.project.name, self.project.archive.username)
 
     @property
     def metadata(self):
@@ -140,6 +146,7 @@ class Container(object):
 
     def download(self, file_path, local_directory="."):
         """Download a file from the container"""
+        # todo: allow file_path to be a File object
         headers, contents = self.project._connection.get_object(self.name, file_path)
         local_directory = os.path.join(os.path.abspath(local_directory),
                                        *os.path.dirname(file_path).split("/"))
@@ -190,7 +197,7 @@ class Container(object):
                         user_ids.append(item.split(":")[1])  # each item is "project:user_id"
                 acl[key] = [user_id_map.get(user_id, user_id) for user_id in user_ids]
                 if is_public:
-                    acl[key].append("PUBLIC")
+                    acl[key].append("PUBLIC")   
         return acl
 
     def grant_access(self, username, mode='read'):
@@ -229,6 +236,9 @@ class Project(object):
     def __str__(self):
         return self.name
 
+    def __repr__(self):
+        return "Project('{}', username='{}')".format(self.name, self.archive.username)
+
     def _set_scope(self):
         auth = v3.Token(auth_url=OS_AUTH_URL, 
                         token=self.archive._session.get_token(), 
@@ -246,6 +256,13 @@ class Project(object):
             containers = []
         return containers
 
+    def get_container(self, name):
+        if name not in self.containers:
+            container = Container(name, self.archive.username, project=self)
+            container.metadata  # check that we can connect to the container
+            self._containers[name] = container
+        return self.containers[name]
+
     @property
     def containers(self):
         """Containers you have access to in this project."""
@@ -262,17 +279,18 @@ class Project(object):
     def users(self):
         """Return a mapping from usernames to user ids"""
         if self._user_id_map is None:
-            proj_info = self.containers['project_info']
-            user_id_doc = proj_info.read('user_ids', accept=['application/octet-stream'])
             self._user_id_map = {}
-            in_user_list = False
-            for line in user_id_doc.split("\n"):
-                if line:
-                    if line.startswith("# user ids"):
-                        in_user_list = True
-                    elif in_user_list:
-                        user_id, username = line.split(" ")
-                        self._user_id_map[user_id] = username
+            proj_info = self.containers.get('project_info', None)
+            if proj_info:
+                user_id_doc = proj_info.read('user_ids', accept=['application/octet-stream'])
+                in_user_list = False
+                for line in user_id_doc.split("\n"):
+                    if line:
+                        if line.startswith("# user ids"):
+                            in_user_list = True
+                        elif in_user_list:
+                            user_id, username = line.split(" ")
+                            self._user_id_map[user_id] = username
         return self._user_id_map
 
 
@@ -313,10 +331,15 @@ class Archive(object):
 
     def find_container(self, container):
         """
-        Return the Project that contains the requested container name.
+        Search through all projects for the container with the given name.
+
+        Return a Container object.
         
         If the container is not found, raise an Exception
         """
         for project in self.projects.values():
-            if container in project.container_names:
-                return project
+            try:
+                return project.get_container(container)
+            except ClientException:
+                pass
+        raise ValueError("Container {} not found. Please check your access permissions.".format(container))
