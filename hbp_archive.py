@@ -48,6 +48,7 @@ Usage:
 
 """
 
+from __future__ import division
 import getpass
 import os
 from keystoneauth1.identity import v3
@@ -56,8 +57,12 @@ from keystoneauth1.extras._saml2 import V3Saml2Password
 from keystoneclient.v3 import client as ksclient
 import swiftclient.client as swiftclient
 from swiftclient.exceptions import ClientException
+try:
+  from pathlib import Path
+except ImportError:
+  from pathlib2 import Path  # Python 2 backport
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
@@ -151,7 +156,7 @@ class Container(object):
         headers, contents = self.project._connection.get_object(self.name, file_path)
         local_directory = os.path.join(os.path.abspath(local_directory),
                                        *os.path.dirname(file_path).split("/"))
-        os.makedirs(local_directory, exist_ok=True)
+        Path(local_directory).mkdir(parents=True, exist_ok=True)
         local_path = os.path.join(local_directory, os.path.basename(file_path))
         with open(local_path, 'wb') as local:
             local.write(contents)

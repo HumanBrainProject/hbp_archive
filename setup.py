@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='hbp_archive',
-    version='0.3.0',
+    version='0.4.0',
     description='A high-level API for interacting with the Human Brain Project archival storage at CSCS',
     long_description=long_description,
     url='https://github.com/apdavison/hbp_archive',
@@ -21,6 +21,8 @@ setup(
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering',
         'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
@@ -28,5 +30,8 @@ setup(
     ],
     keywords='swift hbp cscs data',
     py_modules=["hbp_archive"],
-    install_requires=['keystoneauth1', 'python-keystoneclient', 'python-swiftclient']
+    install_requires=['keystoneauth1', 
+                      'python-keystoneclient',
+                      'python-swiftclient',
+                      'pathlib2;python_version<"3"',]
 )

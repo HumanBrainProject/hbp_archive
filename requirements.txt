@@ -1,3 +1,4 @@
 keystoneauth1
 python-keystoneclient
 python-swiftclient
+pathlib2  # for Python 2

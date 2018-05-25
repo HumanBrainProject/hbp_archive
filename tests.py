@@ -106,4 +106,18 @@ class ContainerTest(TestCase):
         self.assertGreater(len(content), 0)
 
     def test_access_control(self):
-        self.assertEqual(self.container.access_control(), {})  # empty for normal user account
+        self.assertEqual(self.container.access_control(),
+                         {'read': [], 'write': []})  # empty for normal user account
+
+    def test_download(self):
+        test_filename = "README.txt"
+        tmp_testdir = "tmp_test"
+        expected_local_path = os.path.abspath(os.path.join(tmp_testdir, test_filename))
+        if os.path.exists(expected_local_path):
+            os.remove(expected_local_path)
+        
+        local_path = self.container.download(test_filename, local_directory=tmp_testdir)
+        self.assertEqual(local_path, expected_local_path)
+        self.assert_(os.path.exists(local_path))
+
+        os.remove(local_path)
