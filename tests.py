@@ -166,3 +166,15 @@ class PublicContainerTest(TestCase):
         self.assert_(os.path.exists(local_path))
 
         os.remove(local_path)
+
+
+class FileTest(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.container = PublicContainer("https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea/sp6_validation_data")
+
+    def test_read(self):
+        content1 = self.container.read("README.txt")
+        content2 = self.container.get("README.txt").read()
+        self.assertEqual(content1, content2)

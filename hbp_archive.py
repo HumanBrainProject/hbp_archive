@@ -90,12 +90,13 @@ class File(object):
     A representation of a file in a container.
     """
 
-    def __init__(self, name, bytes, content_type, hash, last_modified):
+    def __init__(self, name, bytes, content_type, hash, last_modified, container=None):
         self.name = name
         self.bytes = bytes
         self.content_type = content_type
         self.hash = hash
         self.last_modified = last_modified
+        self.container = container
 
     def __str__(self):
         return "'{}'".format(self.name)
@@ -111,10 +112,25 @@ class File(object):
     def basename(self):
         return os.path.basename(self.name)
 
-    #def download(self, local_dir):
-    #    raise NotImplementedError()
+    def download(self, local_directory):
+        """Download this file to a local directory."""
+        if self.container:
+            self.container.download(self.name, local_directory=local_directory)
+        else:
+            raise Exception("Parent container not known, unable to download")
+
+    def read(self, decode='utf-8', accept=[]):
+        """Read and return the contents of this file in the container.
+        
+        See the docstring for `Container.read()` for an explanation of the arguments.
+        """
+        if self.container:
+            return self.container.read(self.name, decode=decode, accept=accept)
+        else:
+            raise Exception("Parent container not known, unable to read file contents")
 
     def size(self, units='bytes'):
+        """Return the size of this file in the requested unit (default bytes)."""
         return scale_bytes(self.bytes, units)
 
 
@@ -154,7 +170,14 @@ class Container(object):
     def list(self):  # , content_type=None, newer_than=None, older_than=None):
         """List all files in the container."""
         self._metadata, contents = self.project._connection.get_container(self.name)
-        return [File(**item) for item in contents]
+        return [File(container=self, **item) for item in contents]
+
+    def get(self, file_path):
+        """Return a File object for the file at the given path."""
+        for f in self.list():  # very inefficient
+            if f.name == file_path:
+                return f
+        raise ValueError("Path '{}' does not exist".format(file_path))
 
     def count(self):
         """Number of files in the container"""
@@ -178,7 +201,12 @@ class Container(object):
         # todo: check hash
 
     def read(self, file_path, decode='utf-8', accept=[]):
-        """Read and return the contents of a file in the container"""
+        """Read and return the contents of a file in the container.
+        
+        Files containing text will be decoded using the provided encoding (default utf-8).
+        If you would like to force decoding, put the expected content type in 'accept'.
+        If you would like to prevent any attempt at decoding, set `decode=False`.
+        """
         text_content_types = ["application/json", ]
         headers, contents = self.project._connection.get_object(self.name, file_path)
         # todo: check hash
@@ -258,10 +286,17 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
         if self._content_list is None:
             response = requests.get(self.url, headers={"Accept": "application/json"})
             if response.ok:
-                self._content_list = [File(**entry) for entry in response.json()]
+                self._content_list = [File(container=self, **entry) for entry in response.json()]
             else:
                 raise Exception(response.content)
         return self._content_list
+
+    def get(self, file_path):
+        """Return a File object for the file at the given path."""
+        for f in self.list():  # very inefficient
+            if f.name == file_path:
+                return f
+        raise ValueError("Path '{}' does not exist".format(file_path))
 
     def count(self):
         """Number of files in the container"""
@@ -293,7 +328,12 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
         # todo: check hash
 
     def read(self, file_path, decode='utf-8', accept=[]):
-        """Read and return the contents of a file in the container"""
+        """Read and return the contents of a file in the container.
+        
+        Files containing text will be decoded using the provided encoding (default utf-8).
+        If you would like to force decoding, put the expected content type in 'accept'.
+        If you would like to prevent any attempt at decoding, set `decode=False`.
+        """
         text_content_types = ["application/json", ]
         response = requests.get(self.url + "/" + file_path)
         if response.ok:
