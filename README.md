@@ -5,13 +5,23 @@ Author: Andrew Davison, CNRS
 Usage:
 
 ```python
-    from hbp_archive import Container, Project, Archive
+    from hbp_archive import Container, PublicContainer, Project, Archive
 
-    # Working with a single container
+    # Working with a public container
+
+    container = PublicContainer("https://object.cscs.ch/v1/AUTH_id/my_container")
+    files = container.list()
+    local_file = container.download("README.txt")
+    print(container.read("README.txt"))
+    number_of_files = container.count()
+    size_in_MB = container.size("MB")
+
+    # Working with a private container
 
     container = Container("MyContainer", username="xyzabc")  # you will be prompted for your password
     files = container.list()
     local_file = container.download("README.txt")
+    print(container.read("README.txt"))
     number_of_files = container.count()
     size_in_MB = container.size("MB")
 

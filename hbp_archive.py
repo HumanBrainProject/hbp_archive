@@ -63,7 +63,7 @@ except ImportError:
     from pathlib2 import Path  # Python 2 backport
 import requests
 
-__version__ = "0.5.0dev"
+__version__ = "0.5.0"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
@@ -271,7 +271,7 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
     """
 
     def __init__(self, url):
-        self.url = url  # example: https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea/hippocampus_optimization
+        self.url = url
         self.name = url.split("/")[-1]
         self.project = None
         self._content_list = None
