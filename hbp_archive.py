@@ -58,15 +58,31 @@ from keystoneclient.v3 import client as ksclient
 import swiftclient.client as swiftclient
 from swiftclient.exceptions import ClientException
 try:
-  from pathlib import Path
+    from pathlib import Path
 except ImportError:
-  from pathlib2 import Path  # Python 2 backport
+    from pathlib2 import Path  # Python 2 backport
+import requests
 
-__version__ = "0.4.0"
+__version__ = "0.5.0dev"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
 OS_IDENTITY_PROVIDER_URL = 'https://kc.cscs.ch/auth/realms/cscs/protocol/saml/'
+
+
+def scale_bytes(value, units):
+    """Convert a value in bytes to a different unit"""
+    allowed_units = {
+        'bytes': 1,
+        'kB': 1024,
+        'MB': 1048576,
+        'GB': 1073741824,
+        'TB': 1099511627776
+    }
+    if units not in allowed_units:
+        raise ValueError("Units must be one of {}".format(list(allowed_units.keys())))
+    scale = allowed_units[units]
+    return value / scale
 
 
 class File(object):
@@ -95,12 +111,20 @@ class File(object):
     def basename(self):
         return os.path.basename(self.name)
 
+    #def download(self, local_dir):
+    #    raise NotImplementedError()
+
+    def size(self, units='bytes'):
+        return scale_bytes(self.bytes, units)
+
 
 class Container(object):
     """
     A representation of a storage container,
     with methods for listing, counting, downloading, etc.
     the files it contains.
+
+    A CSCS account is needed to use this class.
     """
 
     def __init__(self, container, username, token=None, project=None):
@@ -138,17 +162,7 @@ class Container(object):
 
     def size(self, units='bytes'):
         """Total size of all data in the container"""
-        allowed_units = {
-            'bytes': 1,
-            'kB': 1024,
-            'MB': 1048576,
-            'GB': 1073741824,
-            'TB': 1099511627776
-        }
-        if units not in allowed_units:
-            raise ValueError("Units must be one of {}".format(list(allowed_units.keys())))
-        scale = allowed_units[units]
-        return int(self.metadata['x-container-bytes-used']) / scale
+        return scale_bytes(int(self.metadata['x-container-bytes-used']), units)
 
     def download(self, file_path, local_directory="."):
         """Download a file from the container"""
@@ -219,6 +233,84 @@ class Container(object):
         headers = {"x-container-{}".format(mode): ",".join(new_acl)}
         response = self.project._connection.post_container(self.name, headers)
         self._metadata = None  # needs to be refreshed
+
+
+class PublicContainer(object):  # todo: figure out inheritance relationship with Container
+    """
+    A representation of a public storage container,
+    with methods for listing, counting, downloading, etc.
+    the files it contains.
+    """
+
+    def __init__(self, url):
+        self.url = url  # example: https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea/hippocampus_optimization
+        self.name = url.split("/")[-1]
+        self.project = None
+        self._content_list = None
+
+    def __str__(self):
+        return self.url
+
+    def __repr__(self):
+        return "PublicContainer('{}')".format(self.url)
+
+    def list(self):  # todo: allow refreshing, in case contents have changed
+        if self._content_list is None:
+            response = requests.get(self.url, headers={"Accept": "application/json"})
+            if response.ok:
+                self._content_list = [File(**entry) for entry in response.json()]
+            else:
+                raise Exception(response.content)
+        return self._content_list
+
+    def count(self):
+        """Number of files in the container"""
+        return len(self.list())
+
+    def size(self, units='bytes'):
+        """Total size of all data in the container"""
+        total_bytes = sum(f.bytes for f in self.list())
+        return scale_bytes(total_bytes, units)
+
+    def download(self, file_path, local_directory="."):
+        """Download a file from the container"""
+        # todo: allow file_path to be a File object
+        # todo: implement direct streaming to file without
+        #       storing copy in memory, see for example
+        #       https://stackoverflow.com/questions/13137817/how-to-download-image-using-requests
+        response = requests.get(self.url + "/" + file_path)
+        if response.ok:
+            contents = response.content
+        else:
+            raise Exception(response.content)
+        local_directory = os.path.join(os.path.abspath(local_directory),
+                                       *os.path.dirname(file_path).split("/"))
+        Path(local_directory).mkdir(parents=True, exist_ok=True)
+        local_path = os.path.join(local_directory, os.path.basename(file_path))
+        with open(local_path, 'wb') as local:
+            local.write(contents)
+        return local_path
+        # todo: check hash
+
+    def read(self, file_path, decode='utf-8', accept=[]):
+        """Read and return the contents of a file in the container"""
+        text_content_types = ["application/json", ]
+        response = requests.get(self.url + "/" + file_path)
+        if response.ok:
+            contents = response.content
+            headers = response.headers
+        else:
+            raise Exception(response.content)
+        # todo: check hash
+        content_type = headers["Content-Type"]
+        if ";" in content_type:
+            content_type, encoding = content_type.split(";")
+            # todo: handle conflict between encoding and "decode" argument
+        ct_parts = content_type.split("/")
+        if (ct_parts[0] == "text" or content_type in text_content_types or content_type in accept) and decode:
+            return contents.decode(decode)
+        else:
+            return contents
 
 
 class Project(object):

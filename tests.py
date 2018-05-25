@@ -21,7 +21,7 @@ Unit tests for hbp_archive
 import os
 import mock
 from unittest import TestCase
-from hbp_archive import Archive, Project, Container
+from hbp_archive import Archive, Project, Container, PublicContainer
 
 
 class ArchiveTest(TestCase):
@@ -108,6 +108,51 @@ class ContainerTest(TestCase):
     def test_access_control(self):
         self.assertEqual(self.container.access_control(),
                          {'read': [], 'write': []})  # empty for normal user account
+
+    def test_download(self):
+        test_filename = "README.txt"
+        tmp_testdir = "tmp_test"
+        expected_local_path = os.path.abspath(os.path.join(tmp_testdir, test_filename))
+        if os.path.exists(expected_local_path):
+            os.remove(expected_local_path)
+        
+        local_path = self.container.download(test_filename, local_directory=tmp_testdir)
+        self.assertEqual(local_path, expected_local_path)
+        self.assert_(os.path.exists(local_path))
+
+        os.remove(local_path)
+
+
+class PublicContainerTest(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.container = PublicContainer("https://object.cscs.ch/v1/AUTH_c0a333ecf7c045809321ce9d9ecdfdea/sp6_validation_data")
+
+    def test_repr(self):
+        self.assertEqual(repr(self.container),
+                         "PublicContainer('{}')".format(self.container.url))
+        self.assertEqual(str(self.container),
+                         self.container.url)
+
+    def test_list(self):
+        self.assertIn("README.txt", [f.name for f in self.container.list()])
+
+    def test_count(self):
+        self.assertGreater(self.container.count(), 0)
+
+    def test_size(self):
+        size_bytes = self.container.size()
+        size_kB = self.container.size('kB')
+        size_TB = self.container.size('TB')
+        self.assertGreater(size_bytes, 0)
+        self.assertLess(size_TB, 1)
+        self.assertEqual(size_kB * 1024, size_bytes)
+        self.assertRaises(ValueError, self.container.size, 'cats')
+
+    def test_read(self):
+        content = self.container.read("README.txt")
+        self.assertGreater(len(content), 0)
 
     def test_download(self):
         test_filename = "README.txt"
