@@ -121,7 +121,7 @@ class File(object):
 
     def read(self, decode='utf-8', accept=[]):
         """Read and return the contents of this file in the container.
-        
+
         See the docstring for `Container.read()` for an explanation of the arguments.
         """
         if self.container:
@@ -202,7 +202,7 @@ class Container(object):
 
     def read(self, file_path, decode='utf-8', accept=[]):
         """Read and return the contents of a file in the container.
-        
+
         Files containing text will be decoded using the provided encoding (default utf-8).
         If you would like to force decoding, put the expected content type in 'accept'.
         If you would like to prevent any attempt at decoding, set `decode=False`.
@@ -329,7 +329,7 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
 
     def read(self, file_path, decode='utf-8', accept=[]):
         """Read and return the contents of a file in the container.
-        
+
         Files containing text will be decoded using the provided encoding (default utf-8).
         If you would like to force decoding, put the expected content type in 'accept'.
         If you would like to prevent any attempt at decoding, set `decode=False`.
@@ -455,7 +455,10 @@ class Archive(object):
 
         self._session = session.Session(auth=auth)
         self._client = ksclient.Client(session=self._session, interface='public')
-        self.user_id = self._session.get_user_id()
+        try:
+            self.user_id = self._session.get_user_id()
+        except IndexError:
+            raise Exception("Couldn't authenticate! Incorrect username and/or password.")
         self._ks_projects = {ksprj.name: ksprj
                              for ksprj in self._client.projects.list(user=self.user_id)}
         self._projects = None
