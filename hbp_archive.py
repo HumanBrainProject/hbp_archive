@@ -112,10 +112,10 @@ class File(object):
     def basename(self):
         return os.path.basename(self.name)
 
-    def download(self, local_directory):
+    def download(self, local_directory, overwrite=False):
         """Download this file to a local directory."""
         if self.container:
-            self.container.download(self.name, local_directory=local_directory)
+            self.container.download(self.name, local_directory=local_directory, overwrite=overwrite)
         else:
             raise Exception("Parent container not known, unable to download")
 
@@ -187,7 +187,7 @@ class Container(object):
         """Total size of all data in the container"""
         return scale_bytes(int(self.metadata['x-container-bytes-used']), units)
 
-    def download(self, file_path, local_directory="."):
+    def download(self, file_path, local_directory=".", overwrite=False):
         """Download a file from the container"""
         # todo: allow file_path to be a File object
         headers, contents = self.project._connection.get_object(self.name, file_path)
@@ -195,7 +195,11 @@ class Container(object):
                                        *os.path.dirname(file_path).split("/"))
         Path(local_directory).mkdir(parents=True, exist_ok=True)
         local_path = os.path.join(local_directory, os.path.basename(file_path))
-        with open(local_path, 'wb') as local:
+        if overwrite:
+            mode = "wb+"
+        else:
+            mode = "wb"
+        with open(local_path, mode) as local:
             local.write(contents)
         return local_path
         # todo: check hash
