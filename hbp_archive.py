@@ -113,7 +113,15 @@ class File(object):
         return os.path.basename(self.name)
 
     def download(self, local_directory, with_tree=True, overwrite=False):
-        """Download this file to a local directory."""
+        """Download this file to a local directory. The following parameters may be specified:
+
+        local_directory : string
+            Local directory path where file is to be saved.
+        with_tree : boolean, optional
+            Specify if directory structure of file is to be retained.
+        overwrite : boolean, optional
+            Specify if any already existing file needs to be overwritten.
+        """
         if self.container:
             self.container.download(self.name, local_directory=local_directory, with_tree=with_tree, overwrite=overwrite)
         else:
@@ -188,7 +196,17 @@ class Container(object):
         return scale_bytes(int(self.metadata['x-container-bytes-used']), units)
 
     def download(self, file_path, local_directory=".", with_tree=True, overwrite=False):
-        """Download a file from the container"""
+        """Download a file from the container. The following parameters may be specified:
+
+        file_path : string
+            Path of file to be downloaded.
+        local_directory : string, optional
+            Local directory path where file is to be saved.
+        with_tree : boolean, optional
+            Specify if directory structure of file is to be retained.
+        overwrite : boolean, optional
+            Specify if any already existing file needs to be overwritten.
+        """
         # todo: allow file_path to be a File object
         headers, contents = self.project._connection.get_object(self.name, file_path)
         if with_tree:
@@ -311,7 +329,17 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
         return scale_bytes(total_bytes, units)
 
     def download(self, file_path, local_directory=".", with_tree=True, overwrite=False):
-        """Download a file from the container"""
+        """Download a file from the container. The following parameters may be specified:
+
+        file_path : string
+            Path of file to be downloaded.
+        local_directory : string, optional
+            Local directory path where file is to be saved.
+        with_tree : boolean, optional
+            Specify if directory structure of file is to be retained.
+        overwrite : boolean, optional
+            Specify if any already existing file needs to be overwritten.
+        """
         # todo: allow file_path to be a File object
         # todo: implement direct streaming to file without
         #       storing copy in memory, see for example
