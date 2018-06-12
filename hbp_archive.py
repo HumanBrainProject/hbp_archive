@@ -112,10 +112,18 @@ class File(object):
     def basename(self):
         return os.path.basename(self.name)
 
-    def download(self, local_directory):
-        """Download this file to a local directory."""
+    def download(self, local_directory, with_tree=True, overwrite=False):
+        """Download this file to a local directory. The following parameters may be specified:
+
+        local_directory : string
+            Local directory path where file is to be saved.
+        with_tree : boolean, optional
+            Specify if directory structure of file is to be retained.
+        overwrite : boolean, optional
+            Specify if any already existing file needs to be overwritten.
+        """
         if self.container:
-            self.container.download(self.name, local_directory=local_directory)
+            self.container.download(self.name, local_directory=local_directory, with_tree=with_tree, overwrite=overwrite)
         else:
             raise Exception("Parent container not known, unable to download")
 
@@ -187,15 +195,28 @@ class Container(object):
         """Total size of all data in the container"""
         return scale_bytes(int(self.metadata['x-container-bytes-used']), units)
 
-    def download(self, file_path, local_directory="."):
-        """Download a file from the container"""
+    def download(self, file_path, local_directory=".", with_tree=True, overwrite=False):
+        """Download a file from the container. The following parameters may be specified:
+
+        file_path : string
+            Path of file to be downloaded.
+        local_directory : string, optional
+            Local directory path where file is to be saved.
+        with_tree : boolean, optional
+            Specify if directory structure of file is to be retained.
+        overwrite : boolean, optional
+            Specify if any already existing file needs to be overwritten.
+        """
         # todo: allow file_path to be a File object
         headers, contents = self.project._connection.get_object(self.name, file_path)
-        local_directory = os.path.join(os.path.abspath(local_directory),
-                                       *os.path.dirname(file_path).split("/"))
+        if with_tree:
+            local_directory = os.path.join(os.path.abspath(local_directory),
+                                           *os.path.dirname(file_path).split("/"))
         Path(local_directory).mkdir(parents=True, exist_ok=True)
         local_path = os.path.join(local_directory, os.path.basename(file_path))
-        with open(local_path, 'wb') as local:
+        if not overwrite and os.path.exists(local_path):
+            raise IOError("Destination file ({}) already exists! Set `overwrite=True` to overwrite file.".format(local_path))
+        with open(local_path, "wb") as local:
             local.write(contents)
         return local_path
         # todo: check hash
@@ -307,8 +328,18 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
         total_bytes = sum(f.bytes for f in self.list())
         return scale_bytes(total_bytes, units)
 
-    def download(self, file_path, local_directory="."):
-        """Download a file from the container"""
+    def download(self, file_path, local_directory=".", with_tree=True, overwrite=False):
+        """Download a file from the container. The following parameters may be specified:
+
+        file_path : string
+            Path of file to be downloaded.
+        local_directory : string, optional
+            Local directory path where file is to be saved.
+        with_tree : boolean, optional
+            Specify if directory structure of file is to be retained.
+        overwrite : boolean, optional
+            Specify if any already existing file needs to be overwritten.
+        """
         # todo: allow file_path to be a File object
         # todo: implement direct streaming to file without
         #       storing copy in memory, see for example
@@ -318,10 +349,13 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
             contents = response.content
         else:
             raise Exception(response.content)
-        local_directory = os.path.join(os.path.abspath(local_directory),
-                                       *os.path.dirname(file_path).split("/"))
+        if with_tree:
+            local_directory = os.path.join(os.path.abspath(local_directory),
+                                           *os.path.dirname(file_path).split("/"))
         Path(local_directory).mkdir(parents=True, exist_ok=True)
         local_path = os.path.join(local_directory, os.path.basename(file_path))
+        if not overwrite and os.path.exists(local_path):
+            raise IOError("Destination file ({}) already exists! Set `overwrite=True` to overwrite file.".format(local_path))
         with open(local_path, 'wb') as local:
             local.write(contents)
         return local_path
