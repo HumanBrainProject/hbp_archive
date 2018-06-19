@@ -145,12 +145,12 @@ class File(object):
         new_name : string, optional
             New name to be assigned to file (including extension, if any)
         overwrite : boolean, optional
-            Specify if any already existing file needs to be overwritten.
+            Specify if any already existing file should be overwritten.
         """
         if self.container:
             self.container.move(self.name, target_directory=target_directory, new_name=new_name, overwrite=overwrite)
         else:
-            raise Exception("Parent container not known, unable to download")
+            raise Exception("Parent container not known, unable to move")
 
     def rename(self, new_name, overwrite=False):
         """Rename this file within the source directory. The following parameters may be specified:
