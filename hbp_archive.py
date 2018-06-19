@@ -137,6 +137,31 @@ class File(object):
         else:
             raise Exception("Parent container not known, unable to read file contents")
 
+    def move(self, target_directory, new_name=None, overwrite=False):
+        """Move this file to the specified directory. The following parameters may be specified:
+
+        target_directory : string
+            Target directory where the file is to be moved.
+        new_name : string, optional
+            New name to be assigned to file (including extension, if any)
+        overwrite : boolean, optional
+            Specify if any already existing file needs to be overwritten.
+        """
+        if self.container:
+            self.container.move(self.name, target_directory=target_directory, new_name=new_name, overwrite=overwrite)
+        else:
+            raise Exception("Parent container not known, unable to download")
+
+    def rename(self, new_name, overwrite=False):
+        """Rename this file within the source directory. The following parameters may be specified:
+
+        new_name : string
+            New name to be assigned to file (including extension, if any)
+        overwrite : boolean, optional
+            Specify if any already existing file needs to be overwritten.
+        """
+        self.move(target_directory=os.path.dirname(self.name), new_name=new_name, overwrite=overwrite)
+
     def size(self, units='bytes'):
         """Return the size of this file in the requested unit (default bytes)."""
         return scale_bytes(self.bytes, units)
@@ -238,6 +263,38 @@ class Container(object):
         else:
             return contents
 
+    def move(self, file_path, target_directory, new_name=None, overwrite=False):
+        """Move this file to the specified directory. The following parameters may be specified:
+        file_path : string
+            Path of file to be downloaded.
+        target_directory : string
+            Target directory where the file is to be moved.
+        new_name : string, optional
+            New name to be assigned to file (including extension, if any)
+        overwrite : boolean, optional
+            Specify if any already existing file needs to be overwritten.
+        """
+        if not overwrite:
+            try:
+                res = self.project._connection.head_object(self.name, file_path)
+                raise IOError("Target file path already exists! Set `overwrite=True` to overwrite file.")
+            except IOError as e:
+                print(e)
+                return
+            except ClientException as e:
+                pass
+        try:
+            if not new_name:
+                new_name = os.path.basename(file_path)
+            self.project._connection.copy_object(self.name, file_path, destination=os.path.join(self.name, target_directory, new_name))
+            self.project._connection.delete_object(self.name, file_path)
+            if os.path.dirname(file_path) == target_directory:
+                print("Successfully renamed the object")
+            else:
+                print("Successfully moved the object")
+        except ClientException as e:
+            print("Failed to move/rename the object with error: %s" % e)
+
     def delete(self, file_path):
         """ """
         try:
@@ -289,6 +346,9 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
     A representation of a public storage container,
     with methods for listing, counting, downloading, etc.
     the files it contains.
+
+    Note: This class only permits read-only operations. For other features,
+    you may access a public container via the `Container` class.
     """
 
     def __init__(self, url):
