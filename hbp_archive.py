@@ -272,7 +272,7 @@ class Container(object):
         new_name : string, optional
             New name to be assigned to file (including extension, if any)
         overwrite : boolean, optional
-            Specify if any already existing file needs to be overwritten.
+            Specify if any already existing file should be overwritten.
         """
         if not overwrite:
             try:
