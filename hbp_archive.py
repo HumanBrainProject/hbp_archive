@@ -120,7 +120,7 @@ class File(object):
         with_tree : boolean, optional
             Specify if directory structure of file is to be retained.
         overwrite : boolean, optional
-            Specify if any already existing file needs to be overwritten.
+            Specify if any already existing file should be overwritten.
         """
         if self.container:
             self.container.download(self.name, local_directory=local_directory, with_tree=with_tree, overwrite=overwrite)
@@ -158,7 +158,7 @@ class File(object):
         new_name : string
             New name to be assigned to file (including extension, if any)
         overwrite : boolean, optional
-            Specify if any already existing file needs to be overwritten.
+            Specify if any already existing file should be overwritten.
         """
         self.move(target_directory=os.path.dirname(self.name), new_name=new_name, overwrite=overwrite)
 
@@ -230,7 +230,7 @@ class Container(object):
         with_tree : boolean, optional
             Specify if directory structure of file is to be retained.
         overwrite : boolean, optional
-            Specify if any already existing file needs to be overwritten.
+            Specify if any already existing file should be overwritten.
         """
         # todo: allow file_path to be a File object
         headers, contents = self.project._connection.get_object(self.name, file_path)
@@ -398,7 +398,7 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
         with_tree : boolean, optional
             Specify if directory structure of file is to be retained.
         overwrite : boolean, optional
-            Specify if any already existing file needs to be overwritten.
+            Specify if any already existing file should be overwritten.
         """
         # todo: allow file_path to be a File object
         # todo: implement direct streaming to file without
