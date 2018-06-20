@@ -53,6 +53,7 @@ import getpass
 import os
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
+from keystoneauth1.exceptions.auth import AuthorizationFailure
 from keystoneauth1.extras._saml2 import V3Saml2Password
 from keystoneclient.v3 import client as ksclient
 import swiftclient.client as swiftclient
@@ -551,8 +552,10 @@ class Archive(object):
         self._client = ksclient.Client(session=self._session, interface='public')
         try:
             self.user_id = self._session.get_user_id()
+        except AuthorizationFailure:
+            raise Exception("Couldn't authenticate! Incorrect username.")
         except IndexError:
-            raise Exception("Couldn't authenticate! Incorrect username and/or password.")
+            raise Exception("Couldn't authenticate! Incorrect password.")
         self._ks_projects = {ksprj.name: ksprj
                              for ksprj in self._client.projects.list(user=self.user_id)}
         self._projects = None
