@@ -20,10 +20,17 @@ Usage:
 
     container = Container("MyContainer", username="xyzabc")  # you will be prompted for your password
     files = container.list()
-    local_file = container.download("README.txt")
+    local_file = container.download("README.txt", overwrite=True)  # default is not to overwrite existing files
     print(container.read("README.txt"))
     number_of_files = container.count()
     size_in_MB = container.size("MB")
+
+    container.move("my_file.dat", "a_subdirectory", "new_name.dat")  # move/rename file within a container
+
+    # Reading a file directly, without downloading it
+
+    with container.open("my_data.txt") as fp:
+        data = np.loadtxt(fp)
 
     # Working with a project
 
