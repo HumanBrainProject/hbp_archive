@@ -475,7 +475,7 @@ class Project(object):
         self.id = ks_project.id
         self.name = ks_project.name
         self._session = None
-        self._connection = None
+        self.__connection = None
         self._containers = None
         self._user_id_map = None
 
@@ -485,6 +485,14 @@ class Project(object):
     def __repr__(self):
         return "Project('{}', username='{}')".format(self.name, self.archive.username)
 
+    @property
+    def _connection(self):
+        if self.__connection is None:
+            if self._session is None:
+                self._set_scope()
+            self.__connection = swiftclient.Connection(session=self._session)
+        return self.__connection
+
     def _set_scope(self):
         auth = v3.Token(auth_url=OS_AUTH_URL,
                         token=self.archive._session.get_token(),
@@ -492,10 +500,6 @@ class Project(object):
         self._session = session.Session(auth=auth)
 
     def _get_container_info(self):
-        if self._connection is None:
-            if self._session is None:
-                self._set_scope()
-            self._connection = swiftclient.Connection(session=self._session)
         try:
             headers, containers = self._connection.get_account()
         except ClientException:
