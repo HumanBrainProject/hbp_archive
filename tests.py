@@ -122,6 +122,14 @@ class ContainerTest(TestCase):
 
         os.remove(local_path)
 
+    @mock.patch('getpass.getpass')
+    def test_instantiate_with_project_name(self, getpw):
+        # see issue #8
+        getpw.return_value = os.environ["HBP_ARCHIVE_PASSWORD"]
+        username = os.environ["HBP_ARCHIVE_USERNAME"]
+        container2 = Container("sp6_validation_data", username, project="bp00sp06")
+        container2.list()
+
 
 class PublicContainerTest(TestCase):
 
