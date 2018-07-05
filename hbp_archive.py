@@ -287,9 +287,11 @@ class Container(object):
         overwrite : boolean, optional
             Specify if any already existing file should be overwritten.
         """
+        if not new_name:
+            new_name = os.path.basename(file_path)
         if not overwrite:
             try:
-                res = self.project._connection.head_object(self.name, file_path)
+                res = self.project._connection.head_object(self.name, os.path.join(target_directory, new_name))
                 raise IOError("Target file path already exists! Set `overwrite=True` to overwrite file.")
             except IOError as e:
                 print(e)
@@ -297,8 +299,6 @@ class Container(object):
             except ClientException as e:
                 pass
         try:
-            if not new_name:
-                new_name = os.path.basename(file_path)
             self.project._connection.copy_object(self.name, file_path, destination=os.path.join(self.name, target_directory, new_name))
             self.project._connection.delete_object(self.name, file_path)
             if os.path.dirname(file_path) == target_directory:
