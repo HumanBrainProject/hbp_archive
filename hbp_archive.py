@@ -175,6 +175,22 @@ class File(object):
         """
         self.move(target_directory=os.path.dirname(self.name), new_name=new_name, overwrite=overwrite)
 
+    def copy(self, target_directory, new_name=None, overwrite=False):
+        """Copy this file to specified directory. The following parameters may be specified:
+
+        target_directory : string
+            Target directory where the file is to be moved.
+        new_name : string, optional
+            New name to be assigned to file (including extension, if any)
+        overwrite : boolean, optional
+            Specify if any already existing file at target location should be overwritten.
+        """
+        self.container.copy(self.name, target_directory=os.path.dirname(self.name), new_name=new_name, overwrite=overwrite)
+
+    def delete(self):
+        """Delete this file."""
+        self.container.delete(self.name)
+
     def size(self, units='bytes'):
         """Return the size of this file in the requested unit (default bytes)."""
         return scale_bytes(self.bytes, units)
@@ -276,8 +292,36 @@ class Container(object):
         else:
             return contents
 
+    def copy(self, file_path, target_directory, new_name=None, overwrite=False):
+        """Copy a file to the specified directory. The following parameters may be specified:
+        file_path : string
+            Path of file to be downloaded.
+        target_directory : string
+            Target directory where the file is to be moved.
+        new_name : string, optional
+            New name to be assigned to file (including extension, if any)
+        overwrite : boolean, optional
+            Specify if any already existing file should be overwritten.
+        """
+        if not new_name:
+            new_name = os.path.basename(file_path)
+        if not overwrite:
+            try:
+                res = self.project._connection.head_object(self.name, os.path.join(target_directory, new_name))
+                raise IOError("Target file path already exists! Set `overwrite=True` to overwrite file.")
+            except IOError as e:
+                print(e)
+                return
+            except ClientException as e:
+                pass
+        try:
+            self.project._connection.copy_object(self.name, file_path, destination=os.path.join(self.name, target_directory, new_name))
+            print("Successfully copied the object")
+        except ClientException as e:
+            print("Failed to copy the object with error: %s" % e)
+
     def move(self, file_path, target_directory, new_name=None, overwrite=False):
-        """Move this file to the specified directory. The following parameters may be specified:
+        """Move a file to the specified directory. The following parameters may be specified:
         file_path : string
             Path of file to be downloaded.
         target_directory : string
