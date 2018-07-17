@@ -258,6 +258,10 @@ class Container(object):
             Remote directory path where data is to be uploaded. Default is root directory.
         overwrite : boolean, optional
             Specify if any already existing file at target should be overwritten.
+
+        Note: Using the command-line “swift upload” will likley be faster since
+              it uses a pool of threads to perform multiple uploads in parallel.
+              It is thus recommended for bulk uploads.
         """
         if isinstance(local_paths, str):
             local_paths = [local_paths]
