@@ -252,14 +252,14 @@ class Container(object):
     def upload(self, local_paths, remote_directory="", overwrite=False):
         """Upload file(s) to the container. The following parameters may be specified:
 
-        file_paths : string
+        local_paths : string
             Local path of file(s) to be uploaded.
         remote_directory : string, optional
             Remote directory path where data is to be uploaded. Default is root directory.
         overwrite : boolean, optional
             Specify if any already existing file at target should be overwritten.
 
-        Note: Using the command-line “swift upload” will likley be faster since
+        Note: Using the command-line “swift upload” will likely be faster since
               it uses a pool of threads to perform multiple uploads in parallel.
               It is thus recommended for bulk uploads.
         """
