@@ -249,6 +249,41 @@ class Container(object):
         """Total size of all data in the container"""
         return scale_bytes(int(self.metadata['x-container-bytes-used']), units)
 
+    def upload(self, local_paths, remote_directory="", overwrite=False):
+        """Upload file(s) to the container. The following parameters may be specified:
+
+        local_paths : string
+            Local path of file(s) to be uploaded.
+        remote_directory : string, optional
+            Remote directory path where data is to be uploaded. Default is root directory.
+        overwrite : boolean, optional
+            Specify if any already existing file at target should be overwritten.
+
+        Note: Using the command-line "swift upload" will likely be faster since
+              it uses a pool of threads to perform multiple uploads in parallel.
+              It is thus recommended for bulk uploads.
+        """
+        if isinstance(local_paths, str):
+            local_paths = [local_paths]
+        remote_paths = []
+
+        for path in local_paths:
+            remote_path = os.path.join(remote_directory, os.path.basename(path))
+            if not overwrite:
+                try:
+                    res = self.project._connection.head_object(self.name, remote_path)
+                    raise IOError("Target file path already exists! Set `overwrite=True` to overwrite file.")
+                except IOError as e:            # if file already exists
+                    print("File: {} not uploaded. Reason: {}".format(path, e))
+                    return
+                except ClientException as e:    # if file does not exist
+                    pass
+            with open(path, 'rb') as f:
+                file_data = f.read()
+                self.project._connection.put_object(self.name, remote_path, file_data)
+                remote_paths.append(remote_path)
+        return remote_paths
+
     def download(self, file_path, local_directory=".", with_tree=True, overwrite=False):
         """Download a file from the container. The following parameters may be specified:
 
