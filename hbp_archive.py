@@ -259,7 +259,7 @@ class Container(object):
         overwrite : boolean, optional
             Specify if any already existing file at target should be overwritten.
 
-        Note: Using the command-line “swift upload” will likely be faster since
+        Note: Using the command-line "swift upload" will likely be faster since
               it uses a pool of threads to perform multiple uploads in parallel.
               It is thus recommended for bulk uploads.
         """
