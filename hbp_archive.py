@@ -179,7 +179,7 @@ class File(object):
         """Copy this file to specified directory. The following parameters may be specified:
 
         target_directory : string
-            Target directory where the file is to be moved.
+            Target directory where the file is to be copied.
         new_name : string, optional
             New name to be assigned to file (including extension, if any)
         overwrite : boolean, optional
@@ -252,7 +252,7 @@ class Container(object):
     def upload(self, local_paths, remote_directory="", overwrite=False):
         """Upload file(s) to the container. The following parameters may be specified:
 
-        local_paths : string
+        local_paths : string, list of strings
             Local path of file(s) to be uploaded.
         remote_directory : string, optional
             Remote directory path where data is to be uploaded. Default is root directory.
@@ -329,10 +329,11 @@ class Container(object):
 
     def copy(self, file_path, target_directory, new_name=None, overwrite=False):
         """Copy a file to the specified directory. The following parameters may be specified:
+
         file_path : string
-            Path of file to be downloaded.
+            Path of file to be copied.
         target_directory : string
-            Target directory where the file is to be moved.
+            Target directory where the file is to be copied.
         new_name : string, optional
             New name to be assigned to file (including extension, if any)
         overwrite : boolean, optional
@@ -357,8 +358,9 @@ class Container(object):
 
     def move(self, file_path, target_directory, new_name=None, overwrite=False):
         """Move a file to the specified directory. The following parameters may be specified:
+
         file_path : string
-            Path of file to be downloaded.
+            Path of file to be moved.
         target_directory : string
             Target directory where the file is to be moved.
         new_name : string, optional
@@ -388,12 +390,25 @@ class Container(object):
             print("Failed to move/rename the object with error: %s" % e)
 
     def delete(self, file_path):
-        """ """
+        """Delete the specified file. The following parameter needs to be specified:
+        
+        file_path : string
+            Path of file to be deleted.
+        """
         try:
             self.project._connection.delete_object(self.name, file_path)
             print("Successfully deleted the object")
         except ClientException as e:
             print("Failed to delete the object with error: %s" % e)
+
+    def copy_directory():
+        pass
+
+    def move_directory():
+        pass
+
+    def delete_directory():
+        pass
 
     def access_control(self, show_usernames=True):
         """List the users that have access to this container."""
