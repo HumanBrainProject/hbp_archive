@@ -16,7 +16,7 @@
 """
 A high-level API for interacting with the Human Brain Project archival storage at CSCS.
 
-Author: Andrew Davison, CNRS
+Author: Andrew Davison and Shailesh Appukuttan, CNRS
 
 Usage:
 
@@ -75,6 +75,7 @@ try:
 except ImportError:
     from pathlib2 import Path  # Python 2 backport
 import requests
+import logging
 
 __version__ = "0.6.0"
 
@@ -82,6 +83,7 @@ OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
 OS_IDENTITY_PROVIDER_URL = 'https://kc.cscs.ch/auth/realms/cscs/protocol/saml/'
 
+logger = logging.getLogger("hbp_archive")
 
 def scale_bytes(value, units):
     """Convert a value in bytes to a different unit"""
@@ -126,7 +128,8 @@ class File(object):
         return os.path.basename(self.name)
 
     def download(self, local_directory, with_tree=True, overwrite=False):
-        """Download this file to a local directory. The following parameters may be specified:
+        """Download this file to a local directory.
+           The following parameters may be specified:
 
         local_directory : string
             Local directory path where file is to be saved.
@@ -151,12 +154,13 @@ class File(object):
             raise Exception("Parent container not known, unable to read file contents")
 
     def move(self, target_directory, new_name=None, overwrite=False):
-        """Move this file to the specified directory. The following parameters may be specified:
+        """Move this file to the specified directory.
+           The following parameters may be specified:
 
         target_directory : string
             Target directory where the file is to be moved.
         new_name : string, optional
-            New name to be assigned to file (including extension, if any)
+            New name to be assigned to file (including extension, if any).
         overwrite : boolean, optional
             Specify if any already existing file should be overwritten.
         """
@@ -166,22 +170,24 @@ class File(object):
             raise Exception("Parent container not known, unable to move")
 
     def rename(self, new_name, overwrite=False):
-        """Rename this file within the source directory. The following parameters may be specified:
+        """Rename this file within the source directory.
+           The following parameters may be specified:
 
         new_name : string
-            New name to be assigned to file (including extension, if any)
+            New name to be assigned to file (including extension, if any).
         overwrite : boolean, optional
             Specify if any already existing file should be overwritten.
         """
         self.move(target_directory=os.path.dirname(self.name), new_name=new_name, overwrite=overwrite)
 
     def copy(self, target_directory, new_name=None, overwrite=False):
-        """Copy this file to specified directory. The following parameters may be specified:
+        """Copy this file to specified directory.
+           The following parameters may be specified:
 
         target_directory : string
-            Target directory where the file is to be moved.
+            Target directory where the file is to be copied.
         new_name : string, optional
-            New name to be assigned to file (including extension, if any)
+            New name to be assigned to file (including extension, if any).
         overwrite : boolean, optional
             Specify if any already existing file at target location should be overwritten.
         """
@@ -250,9 +256,10 @@ class Container(object):
         return scale_bytes(int(self.metadata['x-container-bytes-used']), units)
 
     def upload(self, local_paths, remote_directory="", overwrite=False):
-        """Upload file(s) to the container. The following parameters may be specified:
+        """Upload file(s) to the container.
+           The following parameters may be specified:
 
-        local_paths : string
+        local_paths : string, list of strings
             Local path of file(s) to be uploaded.
         remote_directory : string, optional
             Remote directory path where data is to be uploaded. Default is root directory.
@@ -274,7 +281,7 @@ class Container(object):
                     res = self.project._connection.head_object(self.name, remote_path)
                     raise IOError("Target file path already exists! Set `overwrite=True` to overwrite file.")
                 except IOError as e:            # if file already exists
-                    print("File: {} not uploaded. Reason: {}".format(path, e))
+                    logging.error("File: {} not uploaded. Reason: {}".format(path, e))
                     return
                 except ClientException as e:    # if file does not exist
                     pass
@@ -285,7 +292,8 @@ class Container(object):
         return remote_paths
 
     def download(self, file_path, local_directory=".", with_tree=True, overwrite=False):
-        """Download a file from the container. The following parameters may be specified:
+        """Download a file from the container.
+           The following parameters may be specified:
 
         file_path : string
             Path of file to be downloaded.
@@ -328,13 +336,15 @@ class Container(object):
             return contents
 
     def copy(self, file_path, target_directory, new_name=None, overwrite=False):
-        """Copy a file to the specified directory. The following parameters may be specified:
+        """Copy a file to the specified directory.
+           The following parameters may be specified:
+
         file_path : string
-            Path of file to be downloaded.
+            Path of file to be copied.
         target_directory : string
-            Target directory where the file is to be moved.
+            Target directory where the file is to be copied.
         new_name : string, optional
-            New name to be assigned to file (including extension, if any)
+            New name to be assigned to file (including extension, if any).
         overwrite : boolean, optional
             Specify if any already existing file should be overwritten.
         """
@@ -345,24 +355,26 @@ class Container(object):
                 res = self.project._connection.head_object(self.name, os.path.join(target_directory, new_name))
                 raise IOError("Target file path already exists! Set `overwrite=True` to overwrite file.")
             except IOError as e:
-                print(e)
+                logging.error(e)
                 return
             except ClientException as e:
                 pass
         try:
             self.project._connection.copy_object(self.name, file_path, destination=os.path.join(self.name, target_directory, new_name))
-            print("Successfully copied the object")
+            logging.info("Successfully copied the object")
         except ClientException as e:
-            print("Failed to copy the object with error: %s" % e)
+            logging.info("Failed to copy the object with error: %s" % e)
 
     def move(self, file_path, target_directory, new_name=None, overwrite=False):
-        """Move a file to the specified directory. The following parameters may be specified:
+        """Move a file to the specified directory.
+           The following parameters may be specified:
+
         file_path : string
-            Path of file to be downloaded.
+            Path of file to be moved.
         target_directory : string
             Target directory where the file is to be moved.
         new_name : string, optional
-            New name to be assigned to file (including extension, if any)
+            New name to be assigned to file (including extension, if any).
         overwrite : boolean, optional
             Specify if any already existing file should be overwritten.
         """
@@ -373,7 +385,7 @@ class Container(object):
                 res = self.project._connection.head_object(self.name, os.path.join(target_directory, new_name))
                 raise IOError("Target file path already exists! Set `overwrite=True` to overwrite file.")
             except IOError as e:
-                print(e)
+                logging.error(e)
                 return
             except ClientException as e:
                 pass
@@ -381,19 +393,104 @@ class Container(object):
             self.project._connection.copy_object(self.name, file_path, destination=os.path.join(self.name, target_directory, new_name))
             self.project._connection.delete_object(self.name, file_path)
             if os.path.dirname(file_path) == target_directory:
-                print("Successfully renamed the object")
+                logging.info("Successfully renamed the object")
             else:
-                print("Successfully moved the object")
+                logging.info("Successfully moved the object")
         except ClientException as e:
-            print("Failed to move/rename the object with error: %s" % e)
+            logging.error("Failed to move/rename the object with error: %s" % e)
 
     def delete(self, file_path):
-        """ """
+        """Delete the specified file.
+           The following parameter needs to be specified:
+
+        file_path : string
+            Path of file to be deleted.
+        """
         try:
             self.project._connection.delete_object(self.name, file_path)
-            print("Successfully deleted the object")
+            logging.info("Successfully deleted the object")
         except ClientException as e:
-            print("Failed to delete the object with error: %s" % e)
+            logging.error("Failed to delete the object with error: %s" % e)
+
+    def copy_directory(self, directory_path, target_directory, new_name=None, overwrite=False):
+        """Copy a directory to the specified directory location.
+           The original tree structure of the directory will be maintained at
+           the target location. The following parameters may be specified:
+
+        directory_path : string
+            Path of directory to be copied.
+        target_directory : string
+            Path of target directory where specified directory is to be copied.
+        new_name : string, optional
+            New name to be assigned to directory.
+        overwrite : boolean, optional
+            Specify if any already existing files at target location should be
+            overwritten. If False (default value), then only non-conflicting
+            files will be copied over.
+        """
+        if directory_path[-1] != '/':
+            directory_path += '/'
+        if not new_name:
+            new_name = os.path.basename(directory_path)
+        all_files = self.list()
+        dir_files = [f for f in all_files if f.name.startswith(directory_path)]
+        if not dir_files:
+            raise Exception("Specified directory does not exist in this container!")
+        else:
+            logging.info("***** Directory Copy Details *****")
+            for f in dir_files:
+                logging.info("Filename: {}".format(f.name))
+                self.copy(f.name, os.path.join(target_directory, new_name), overwrite=overwrite)
+
+    def move_directory(self, directory_path, target_directory, new_name=None, overwrite=False):
+        """Move a directory to the specified directory location.
+           Can also be used to rename a directory.
+           The original tree structure of the directory will be maintained at
+           the target location. The following parameters may be specified:
+
+        directory_path : string
+            Path of directory to be copied.
+        target_directory : string
+            Path of target directory where specified directory is to be copied.
+        new_name : string, optional
+            New name to be assigned to directory.
+        overwrite : boolean, optional
+            Specify if any already existing files at target location should be
+            overwritten. If False (default value), then only non-conflicting
+            files will be copied over.
+        """
+        if directory_path[-1] != '/':
+            directory_path += '/'
+        if not new_name:
+            new_name = os.path.basename(directory_path)
+        all_files = self.list()
+        dir_files = [f for f in all_files if f.name.startswith(directory_path)]
+        if not dir_files:
+            raise Exception("Specified directory does not exist in this container!")
+        else:
+            logging.info("***** Directory Move Details *****")
+            for f in dir_files:
+                logging.info("Filename: {}".format(f.name))
+                self.move(f.name, os.path.join(target_directory, new_name), overwrite=overwrite)
+
+    def delete_directory(self, directory_path):
+        """Delete the specified directory (and its contents).
+           The following parameter needs to be specified:
+
+        directory_path : string
+            Path of directory to be deleted.
+        """
+        if directory_path[-1] != '/':
+            directory_path += '/'
+        all_files = self.list()
+        dir_files = [f for f in all_files if f.name.startswith(directory_path)]
+        if not dir_files:
+            raise Exception("Specified directory does not exist in this container!")
+        else:
+            logging.info("***** Directory Delete Details *****")
+            for f in dir_files:
+                logging.info("Filename: {}".format(f.name))
+                self.delete(f.name)
 
     def access_control(self, show_usernames=True):
         """List the users that have access to this container."""
