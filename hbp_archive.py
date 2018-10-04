@@ -635,7 +635,9 @@ class Archive(object):
         if token:
             auth = v3.Token(auth_url=OS_AUTH_URL, token=token)
         else:
-            pwd = getpass.getpass("Password: ")
+            pwd = os.environ.get('CSCS_PASS')
+            if not pwd:
+                pwd = getpass.getpass("Password: ")
             auth = V3Saml2Password(auth_url=OS_AUTH_URL,
                                    identity_provider=OS_IDENTITY_PROVIDER,
                                    protocol='mapped',
