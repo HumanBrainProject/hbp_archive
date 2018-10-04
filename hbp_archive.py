@@ -75,6 +75,7 @@ try:
 except ImportError:
     from pathlib2 import Path  # Python 2 backport
 import requests
+import logging
 
 __version__ = "0.6.0"
 
@@ -82,6 +83,7 @@ OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
 OS_IDENTITY_PROVIDER_URL = 'https://kc.cscs.ch/auth/realms/cscs/protocol/saml/'
 
+logger = logging.getLogger("hbp_archive")
 
 def scale_bytes(value, units):
     """Convert a value in bytes to a different unit"""
@@ -279,7 +281,7 @@ class Container(object):
                     res = self.project._connection.head_object(self.name, remote_path)
                     raise IOError("Target file path already exists! Set `overwrite=True` to overwrite file.")
                 except IOError as e:            # if file already exists
-                    print("File: {} not uploaded. Reason: {}".format(path, e))
+                    logging.error("File: {} not uploaded. Reason: {}".format(path, e))
                     return
                 except ClientException as e:    # if file does not exist
                     pass
@@ -353,15 +355,15 @@ class Container(object):
                 res = self.project._connection.head_object(self.name, os.path.join(target_directory, new_name))
                 raise IOError("Target file path already exists! Set `overwrite=True` to overwrite file.")
             except IOError as e:
-                print(e)
+                logging.error(e)
                 return
             except ClientException as e:
                 pass
         try:
             self.project._connection.copy_object(self.name, file_path, destination=os.path.join(self.name, target_directory, new_name))
-            print("Successfully copied the object")
+            logging.info("Successfully copied the object")
         except ClientException as e:
-            print("Failed to copy the object with error: %s" % e)
+            logging.info("Failed to copy the object with error: %s" % e)
 
     def move(self, file_path, target_directory, new_name=None, overwrite=False):
         """Move a file to the specified directory.
@@ -383,7 +385,7 @@ class Container(object):
                 res = self.project._connection.head_object(self.name, os.path.join(target_directory, new_name))
                 raise IOError("Target file path already exists! Set `overwrite=True` to overwrite file.")
             except IOError as e:
-                print(e)
+                logging.error(e)
                 return
             except ClientException as e:
                 pass
@@ -391,11 +393,11 @@ class Container(object):
             self.project._connection.copy_object(self.name, file_path, destination=os.path.join(self.name, target_directory, new_name))
             self.project._connection.delete_object(self.name, file_path)
             if os.path.dirname(file_path) == target_directory:
-                print("Successfully renamed the object")
+                logging.info("Successfully renamed the object")
             else:
-                print("Successfully moved the object")
+                logging.info("Successfully moved the object")
         except ClientException as e:
-            print("Failed to move/rename the object with error: %s" % e)
+            logging.error("Failed to move/rename the object with error: %s" % e)
 
     def delete(self, file_path):
         """Delete the specified file.
@@ -406,9 +408,9 @@ class Container(object):
         """
         try:
             self.project._connection.delete_object(self.name, file_path)
-            print("Successfully deleted the object")
+            logging.info("Successfully deleted the object")
         except ClientException as e:
-            print("Failed to delete the object with error: %s" % e)
+            logging.error("Failed to delete the object with error: %s" % e)
 
     def copy_directory(self, directory_path, target_directory, new_name=None, overwrite=False):
         """Copy a directory to the specified directory location.
@@ -433,11 +435,11 @@ class Container(object):
         all_files = self.list()
         dir_files = [f for f in all_files if f.name.startswith(directory_path)]
         if not dir_files:
-            print("Specified directory does not exist in this container!")
+            raise Exception("Specified directory does not exist in this container!")
         else:
-            print "***** Directory Copy Details *****"
+            logging.info("***** Directory Copy Details *****")
             for f in dir_files:
-                print "Filename: {}".format(f.name)
+                logging.info("Filename: {}".format(f.name))
                 self.copy(f.name, os.path.join(target_directory, new_name), overwrite=overwrite)
 
     def move_directory(self, directory_path, target_directory, new_name=None, overwrite=False):
@@ -464,11 +466,11 @@ class Container(object):
         all_files = self.list()
         dir_files = [f for f in all_files if f.name.startswith(directory_path)]
         if not dir_files:
-            print("Specified directory does not exist in this container!")
+            raise Exception("Specified directory does not exist in this container!")
         else:
-            print "***** Directory Move Details *****"
+            logging.info("***** Directory Move Details *****")
             for f in dir_files:
-                print "Filename: {}".format(f.name)
+                logging.info("Filename: {}".format(f.name))
                 self.move(f.name, os.path.join(target_directory, new_name), overwrite=overwrite)
 
     def delete_directory(self, directory_path):
@@ -483,11 +485,11 @@ class Container(object):
         all_files = self.list()
         dir_files = [f for f in all_files if f.name.startswith(directory_path)]
         if not dir_files:
-            print("Specified directory does not exist in this container!")
+            raise Exception("Specified directory does not exist in this container!")
         else:
-            print "***** Directory Delete Details *****"
+            logging.info("***** Directory Delete Details *****")
             for f in dir_files:
-                print "Filename: {}".format(f.name)
+                logging.info("Filename: {}".format(f.name))
                 self.delete(f.name)
 
     def access_control(self, show_usernames=True):
