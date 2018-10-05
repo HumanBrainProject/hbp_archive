@@ -1,3 +1,13 @@
+# Editor temporary/working/backup files
+*~
+.bak
+*.tmp*
+
+# Sphinx documentation
+docs/_build
+docs/_static
+docs/_templates
+
 __pycache__
 *.pyc
 .coverage
