@@ -18,9 +18,15 @@ A high-level API for interacting with the Human Brain Project archival storage a
 
 Author: Andrew Davison and Shailesh Appukuttan, CNRS
 
-Usage:
+License: Apache License, Version 2.0, see LICENSE.txt
+
+Example Usage
+=============
+
+.. code-block:: python
 
     from hbp_archive import Container, PublicContainer, Project, Archive
+
 
     # Working with a public container
 
@@ -101,8 +107,21 @@ def scale_bytes(value, units):
 
 
 class File(object):
-    """
-    A representation of a file in a container.
+    """A representation of a file in a container.
+
+    The following actions can be performed:
+
+    ====================================   ====================================
+    Action                                 Method
+    ====================================   ====================================
+    Download a file                        :meth:`download`
+    Read contents of a file                :meth:`read`
+    Move a file                            :meth:`move`
+    Rename a file                          :meth:`rename`
+    Copy a file                            :meth:`copy`
+    Delete a file                          :meth:`delete`
+    Get size of file                       :meth:`size`
+    ====================================   ====================================
     """
 
     def __init__(self, name, bytes, content_type, hash, last_modified, container=None):
@@ -129,8 +148,9 @@ class File(object):
 
     def download(self, local_directory, with_tree=True, overwrite=False):
         """Download this file to a local directory.
-           The following parameters may be specified:
 
+        Parameters
+        ----------
         local_directory : string
             Local directory path where file is to be saved.
         with_tree : boolean, optional
@@ -146,7 +166,15 @@ class File(object):
     def read(self, decode='utf-8', accept=[]):
         """Read and return the contents of this file in the container.
 
-        See the docstring for `Container.read()` for an explanation of the arguments.
+        Parameters
+        ----------
+        file_path : string
+            Path of file to be retrieved.
+        decode : string, optional
+            Files containing text will be decoded using specified encoding
+            (default: 'utf-8'). To prevent any attempt at decoding, set `decode=False`.
+        accept : boolean, optional
+            To force decoding, put the expected content type in `accept`.
         """
         if self.container:
             return self.container.read(self.name, decode=decode, accept=accept)
@@ -155,8 +183,9 @@ class File(object):
 
     def move(self, target_directory, new_name=None, overwrite=False):
         """Move this file to the specified directory.
-           The following parameters may be specified:
 
+        Parameters
+        ----------
         target_directory : string
             Target directory where the file is to be moved.
         new_name : string, optional
@@ -171,8 +200,9 @@ class File(object):
 
     def rename(self, new_name, overwrite=False):
         """Rename this file within the source directory.
-           The following parameters may be specified:
 
+        Parameters
+        ----------
         new_name : string
             New name to be assigned to file (including extension, if any).
         overwrite : boolean, optional
@@ -182,8 +212,9 @@ class File(object):
 
     def copy(self, target_directory, new_name=None, overwrite=False):
         """Copy this file to specified directory.
-           The following parameters may be specified:
 
+        Parameters
+        ----------
         target_directory : string
             Target directory where the file is to be copied.
         new_name : string, optional
@@ -198,17 +229,42 @@ class File(object):
         self.container.delete(self.name)
 
     def size(self, units='bytes'):
-        """Return the size of this file in the requested unit (default bytes)."""
+        """Return the size of this file in the requested unit (default bytes).
+
+        Parameters
+        ----------
+        units : string
+            Requested units for output.
+            Options: 'bytes' (default), 'kB', 'MB', 'GB', 'TB'
+        """
         return scale_bytes(self.bytes, units)
 
 
 class Container(object):
-    """
-    A representation of a storage container,
-    with methods for listing, counting, downloading, etc.
-    the files it contains.
+    """A representation of a CSCS storage container. Can be used to operate both
+    public and private CSCS containers. A CSCS account is needed to use this class.
 
-    A CSCS account is needed to use this class.
+    The following actions can be performed:
+
+    ====================================   ====================================
+    Action                                 Method
+    ====================================   ====================================
+    List all files in container            :meth:`list`
+    Return a file from given path          :meth:`get`
+    Get number of files in container       :meth:`count`
+    Get total size of data in container    :meth:`size`
+    Upload file(s) to container            :meth:`upload`
+    Download a file from container         :meth:`download`
+    Read contents of file in container     :meth:`read`
+    Copy a file in container               :meth:`copy`
+    Move a file in container               :meth:`move`
+    Delete a file in container             :meth:`delete`
+    Copy a directory in container          :meth:`copy_directory`
+    Move a directory in container          :meth:`move_directory`
+    Delete a directory  in container       :meth:`delete_directory`
+    List users with access to container    :meth:`access_control`
+    Grant container access to user         :meth:`grant_access`
+    ====================================   ====================================
     """
 
     def __init__(self, container, username, token=None, project=None):
@@ -241,7 +297,13 @@ class Container(object):
         return [File(container=self, **item) for item in contents]
 
     def get(self, file_path):
-        """Return a File object for the file at the given path."""
+        """Return a File object for the file at the given path.
+
+        Parameters
+        ----------
+        file_path : string
+            Path of file to be retrieved.
+        """
         for f in self.list():  # very inefficient
             if f.name == file_path:
                 return f
@@ -252,13 +314,21 @@ class Container(object):
         return int(self.metadata['x-container-object-count'])
 
     def size(self, units='bytes'):
-        """Total size of all data in the container"""
+        """Total size of all data in the container
+
+        Parameters
+        ----------
+        units : string
+            Requested units for output.
+            Options: 'bytes' (default), 'kB', 'MB', 'GB', 'TB'
+        """
         return scale_bytes(int(self.metadata['x-container-bytes-used']), units)
 
     def upload(self, local_paths, remote_directory="", overwrite=False):
         """Upload file(s) to the container.
-           The following parameters may be specified:
 
+        Parameters
+        ----------
         local_paths : string, list of strings
             Local path of file(s) to be uploaded.
         remote_directory : string, optional
@@ -266,9 +336,11 @@ class Container(object):
         overwrite : boolean, optional
             Specify if any already existing file at target should be overwritten.
 
-        Note: Using the command-line "swift upload" will likely be faster since
-              it uses a pool of threads to perform multiple uploads in parallel.
-              It is thus recommended for bulk uploads.
+        Note
+        ----
+        Using the command-line "swift upload" will likely be faster since
+        it uses a pool of threads to perform multiple uploads in parallel.
+        It is thus recommended for bulk uploads.
         """
         if isinstance(local_paths, str):
             local_paths = [local_paths]
@@ -293,8 +365,9 @@ class Container(object):
 
     def download(self, file_path, local_directory=".", with_tree=True, overwrite=False):
         """Download a file from the container.
-           The following parameters may be specified:
 
+        Parameters
+        ----------
         file_path : string
             Path of file to be downloaded.
         local_directory : string, optional
@@ -321,9 +394,15 @@ class Container(object):
     def read(self, file_path, decode='utf-8', accept=[]):
         """Read and return the contents of a file in the container.
 
-        Files containing text will be decoded using the provided encoding (default utf-8).
-        If you would like to force decoding, put the expected content type in 'accept'.
-        If you would like to prevent any attempt at decoding, set `decode=False`.
+        Parameters
+        ----------
+        file_path : string
+            Path of file to be retrieved.
+        decode : string, optional
+            Files containing text will be decoded using specified encoding
+            (default: 'utf-8'). To prevent any attempt at decoding, set `decode=False`.
+        accept : boolean, optional
+            To force decoding, put the expected content type in `accept`.
         """
         text_content_types = ["application/json", ]
         headers, contents = self.project._connection.get_object(self.name, file_path)
@@ -337,8 +416,9 @@ class Container(object):
 
     def copy(self, file_path, target_directory, new_name=None, overwrite=False):
         """Copy a file to the specified directory.
-           The following parameters may be specified:
 
+        Parameters
+        ----------
         file_path : string
             Path of file to be copied.
         target_directory : string
@@ -367,8 +447,9 @@ class Container(object):
 
     def move(self, file_path, target_directory, new_name=None, overwrite=False):
         """Move a file to the specified directory.
-           The following parameters may be specified:
 
+        Parameters
+        ----------
         file_path : string
             Path of file to be moved.
         target_directory : string
@@ -401,8 +482,9 @@ class Container(object):
 
     def delete(self, file_path):
         """Delete the specified file.
-           The following parameter needs to be specified:
 
+        Parameters
+        ----------
         file_path : string
             Path of file to be deleted.
         """
@@ -415,8 +497,10 @@ class Container(object):
     def copy_directory(self, directory_path, target_directory, new_name=None, overwrite=False):
         """Copy a directory to the specified directory location.
            The original tree structure of the directory will be maintained at
-           the target location. The following parameters may be specified:
+           the target location.
 
+        Parameters
+        ----------
         directory_path : string
             Path of directory to be copied.
         target_directory : string
@@ -446,8 +530,10 @@ class Container(object):
         """Move a directory to the specified directory location.
            Can also be used to rename a directory.
            The original tree structure of the directory will be maintained at
-           the target location. The following parameters may be specified:
+           the target location.
 
+        Parameters
+        ----------
         directory_path : string
             Path of directory to be copied.
         target_directory : string
@@ -475,8 +561,9 @@ class Container(object):
 
     def delete_directory(self, directory_path):
         """Delete the specified directory (and its contents).
-           The following parameter needs to be specified:
 
+        Parameters
+        ----------
         directory_path : string
             Path of directory to be deleted.
         """
@@ -493,7 +580,13 @@ class Container(object):
                 self.delete(f.name)
 
     def access_control(self, show_usernames=True):
-        """List the users that have access to this container."""
+        """List the users that have access to this container.
+
+        Parameters
+        ----------
+        show_usernames : boolean, optional
+            default is `True`
+        """
         acl = {}
         for key in ("read", "write"):
             item = self.metadata.get('x-container-{}'.format(key), [])
@@ -519,6 +612,15 @@ class Container(object):
         """
         Give read or write access to the given user.
 
+        Parameters
+        ----------
+        username : string
+            username of user to be granted access
+        mode : string, optional
+            the access permission to be granted; default = 'read'
+
+        Note
+        ----
         Use restricted to Superusers/Operators.
         """
         name_map = {v: k for k, v in self.project.users.items()}
@@ -531,13 +633,26 @@ class Container(object):
 
 
 class PublicContainer(object):  # todo: figure out inheritance relationship with Container
-    """
-    A representation of a public storage container,
-    with methods for listing, counting, downloading, etc.
-    the files it contains.
+    """A representation of a public CSCS storage container. Can be used to operate
+    only public CSCS containers. A CSCS account is not needed to use this class.
 
-    Note: This class only permits read-only operations. For other features,
-    you may access a public container via the `Container` class.
+    The following actions can be performed:
+
+    ====================================   ====================================
+    Action                                 Method
+    ====================================   ====================================
+    List all files in container            :meth:`list`
+    Return a file from given path          :meth:`get`
+    Get number of files in container       :meth:`count`
+    Get total size of data in container    :meth:`size`
+    Download a file from container         :meth:`download`
+    Read contents of file in container     :meth:`read`
+    ====================================   ====================================
+
+    Note
+    ----
+    This class only permits read-only operations. For other features,
+    you may access a public container via the :class:`Container` class.
     """
 
     def __init__(self, url):
@@ -553,6 +668,7 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
         return "PublicContainer('{}')".format(self.url)
 
     def list(self):  # todo: allow refreshing, in case contents have changed
+        """List all files in the container."""
         if self._content_list is None:
             response = requests.get(self.url, headers={"Accept": "application/json"})
             if response.ok:
@@ -562,7 +678,13 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
         return self._content_list
 
     def get(self, file_path):
-        """Return a File object for the file at the given path."""
+        """Return a File object for the file at the given path.
+
+        Parameters
+        ----------
+        file_path : string
+            Path of file to be retrieved.
+        """
         for f in self.list():  # very inefficient
             if f.name == file_path:
                 return f
@@ -573,12 +695,19 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
         return len(self.list())
 
     def size(self, units='bytes'):
-        """Total size of all data in the container"""
+        """Total size of all data in the container
+
+        Parameters
+        ----------
+        units : string
+            Requested units for output.
+            Options: 'bytes' (default), 'kB', 'MB', 'GB', 'TB'
+        """
         total_bytes = sum(f.bytes for f in self.list())
         return scale_bytes(total_bytes, units)
 
     def download(self, file_path, local_directory=".", with_tree=True, overwrite=False):
-        """Download a file from the container. The following parameters may be specified:
+        """Download a file from the container.
 
         file_path : string
             Path of file to be downloaded.
@@ -613,9 +742,15 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
     def read(self, file_path, decode='utf-8', accept=[]):
         """Read and return the contents of a file in the container.
 
-        Files containing text will be decoded using the provided encoding (default utf-8).
-        If you would like to force decoding, put the expected content type in 'accept'.
-        If you would like to prevent any attempt at decoding, set `decode=False`.
+        Parameters
+        ----------
+        file_path : string
+            Path of file to be retrieved.
+        decode : string, optional
+            Files containing text will be decoded using specified encoding
+            (default: 'utf-8'). To prevent any attempt at decoding, set `decode=False`.
+        accept : boolean, optional
+            To force decoding, put the expected content type in `accept`.
         """
         text_content_types = ["application/json", ]
         response = requests.get(self.url + "/" + file_path)
@@ -637,10 +772,18 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
 
 
 class Project(object):
-    """
-    A representation of a Project,
-    with methods for listing containers and users
-    associated with that project.
+    """A representation of a CSCS Project.
+
+    The following actions can be performed:
+
+    ====================================   ====================================
+    Action                                 Method / Property
+    ====================================   ====================================
+    Get a container from project           :meth:`get_container`
+    List containers that you can access    :attr:`containers`
+    Get names of containers in project     :attr:`container_names`
+    Get mapping of usernames to user ids   :attr:`users`
+    ====================================   ====================================
     """
 
     def __init__(self, project, username, token=None, archive=None):
@@ -683,6 +826,13 @@ class Project(object):
         return containers
 
     def get_container(self, name):
+        """Get a container from project
+
+        Parameters
+        ----------
+        name : string
+            name of the container to be retrieved
+        """
         if name not in self.containers:
             container = Container(name, self.archive.username, project=self)
             container.metadata  # check that we can connect to the container
@@ -699,6 +849,7 @@ class Project(object):
 
     @property
     def container_names(self):
+        """Returns a list of container names"""
         return [item['name'] for item in self._get_container_info()]
 
     @property
@@ -721,10 +872,17 @@ class Project(object):
 
 
 class Archive(object):
-    """
-    A representation of the Human Brain Project archival storage (Pollux SWIFT) at CSCS,
-    with methods for listing the projects you are associated with,
-    and for searching for containers by name.
+    """A representation of the Human Brain Project archival storage
+    (Pollux SWIFT) at CSCS.
+
+    The following actions can be performed:
+
+    ====================================   ====================================
+    Action                                 Method / Property
+    ====================================   ====================================
+    List projects that you can access      :attr:`projects`
+    Search for container in all projects   :meth:`find_container`
+    ====================================   ====================================
     """
 
     def __init__(self, username, token=None):
@@ -766,9 +924,15 @@ class Archive(object):
         """
         Search through all projects for the container with the given name.
 
-        Return a Container object.
+        Parameters
+        ----------
+        name : string
+            name of the container to be searched
 
-        If the container is not found, raise an Exception
+        Returns
+        -------
+        `Container`
+            Requested `Container` object. If not found, Exception raised.
         """
         for project in self.projects.values():
             try:
