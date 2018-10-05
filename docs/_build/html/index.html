@@ -1,0 +1,919 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to hbp_archive’s documentation! &#8212; hbp_archive 0.6.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.6.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">hbp_archive 0.6.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-hbp-archive-s-documentation">
+<h1>Welcome to hbp_archive&#8217;s documentation!<a class="headerlink" href="#welcome-to-hbp-archive-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-hbp_archive"></span><p>A high-level API for interacting with the Human Brain Project archival storage at CSCS.</p>
+<p>Author: Andrew Davison and Shailesh Appukuttan, CNRS</p>
+<p>License: Apache License, Version 2.0, see LICENSE.txt</p>
+<div class="section" id="example-usage">
+<h2>Example Usage<a class="headerlink" href="#example-usage" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hbp_archive</span> <span class="kn">import</span> <span class="n">Container</span><span class="p">,</span> <span class="n">PublicContainer</span><span class="p">,</span> <span class="n">Project</span><span class="p">,</span> <span class="n">Archive</span>
+
+
+<span class="c1"># Working with a public container</span>
+
+<span class="n">container</span> <span class="o">=</span> <span class="n">PublicContainer</span><span class="p">(</span><span class="s2">&quot;https://object.cscs.ch/v1/AUTH_id/my_container&quot;</span><span class="p">)</span>
+<span class="n">files</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
+<span class="n">local_file</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;README.txt&quot;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">container</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;README.txt&quot;</span><span class="p">))</span>
+<span class="n">number_of_files</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+<span class="n">size_in_MB</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="s2">&quot;MB&quot;</span><span class="p">)</span>
+
+<span class="c1"># Working with a private container</span>
+
+<span class="n">container</span> <span class="o">=</span> <span class="n">Container</span><span class="p">(</span><span class="s2">&quot;MyContainer&quot;</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="s2">&quot;xyzabc&quot;</span><span class="p">)</span>  <span class="c1"># you will be prompted for your password</span>
+<span class="n">files</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
+<span class="n">local_file</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="s2">&quot;README.txt&quot;</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>  <span class="c1"># default is not to overwrite existing files</span>
+<span class="k">print</span><span class="p">(</span><span class="n">container</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s2">&quot;README.txt&quot;</span><span class="p">))</span>
+<span class="n">number_of_files</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+<span class="n">size_in_MB</span> <span class="o">=</span> <span class="n">container</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="s2">&quot;MB&quot;</span><span class="p">)</span>
+
+<span class="n">container</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="s2">&quot;my_file.dat&quot;</span><span class="p">,</span> <span class="s2">&quot;a_subdirectory&quot;</span><span class="p">,</span> <span class="s2">&quot;new_name.dat&quot;</span><span class="p">)</span>  <span class="c1"># move/rename file within a container</span>
+
+<span class="c1"># Reading a file directly, without downloading it</span>
+
+<span class="k">with</span> <span class="n">container</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;my_data.txt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">loadtxt</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+
+<span class="c1"># Working with a project</span>
+
+<span class="n">my_proj</span> <span class="o">=</span> <span class="n">Project</span><span class="p">(</span><span class="s1">&#39;MyProject&#39;</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="s2">&quot;xyzabc&quot;</span><span class="p">)</span>
+<span class="n">container</span> <span class="o">=</span> <span class="n">my_proj</span><span class="o">.</span><span class="n">get_container</span><span class="p">(</span><span class="s2">&quot;MyContainer&quot;</span><span class="p">)</span>
+
+<span class="c1"># Listing all your projects</span>
+
+<span class="n">archive</span> <span class="o">=</span> <span class="n">Archive</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="s2">&quot;xyzabc&quot;</span><span class="p">)</span>
+<span class="n">projects</span> <span class="o">=</span> <span class="n">archive</span><span class="o">.</span><span class="n">projects</span>
+<span class="n">container</span> <span class="o">=</span> <span class="n">archive</span><span class="o">.</span><span class="n">find_container</span><span class="p">(</span><span class="s2">&quot;MyContainer&quot;</span><span class="p">)</span>  <span class="c1"># will search through all projects</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="regarding-cscs-authentication">
+<h2>Regarding CSCS Authentication<a class="headerlink" href="#regarding-cscs-authentication" title="Permalink to this headline">¶</a></h2>
+<p>The Python Client attempts to simplify the CSCS authentication process.
+The users have the following options (in order of priority):</p>
+<ol class="arabic">
+<li><p class="first">Setting an environment variable named <code class="docutils literal"><span class="pre">CSCS_PASS</span></code> with your CSCS password.
+On Linux, this can be done as:</p>
+<p><code class="docutils literal"><span class="pre">export</span> <span class="pre">CSCS_PASS='putyourpasswordhere'</span></code></p>
+<p>Environment variables set like this are only stored temporally. When you exit
+the running instance of bash by exiting the terminal, they get discarded. To
+save this permanentally, write the above command into <cite>~/.bashrc</cite> or <cite>~/.profile</cite>
+(you might need to reload these files by, for example, <code class="docutils literal"><span class="pre">source</span> <span class="pre">~/.bashrc</span></code>)</p>
+</li>
+<li><p class="first">Enter your CSCS password when prompted by the Python Client.</p>
+</li>
+</ol>
+</div>
+<div class="section" id="file">
+<h2>File<a class="headerlink" href="#file" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hbp_archive.File">
+<em class="property">class </em><code class="descclassname">hbp_archive.</code><code class="descname">File</code><span class="sig-paren">(</span><em>name</em>, <em>bytes</em>, <em>content_type</em>, <em>hash</em>, <em>last_modified</em>, <em>container=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#File"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.File" title="Permalink to this definition">¶</a></dt>
+<dd><p>A representation of a file in a container.</p>
+<p>The following actions can be performed:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Action</th>
+<th class="head">Method</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Download a file</td>
+<td><a class="reference internal" href="#hbp_archive.File.download" title="hbp_archive.File.download"><code class="xref py py-meth docutils literal"><span class="pre">download()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Read contents of a file</td>
+<td><a class="reference internal" href="#hbp_archive.File.read" title="hbp_archive.File.read"><code class="xref py py-meth docutils literal"><span class="pre">read()</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Move a file</td>
+<td><a class="reference internal" href="#hbp_archive.File.move" title="hbp_archive.File.move"><code class="xref py py-meth docutils literal"><span class="pre">move()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Rename a file</td>
+<td><a class="reference internal" href="#hbp_archive.File.rename" title="hbp_archive.File.rename"><code class="xref py py-meth docutils literal"><span class="pre">rename()</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Copy a file</td>
+<td><a class="reference internal" href="#hbp_archive.File.copy" title="hbp_archive.File.copy"><code class="xref py py-meth docutils literal"><span class="pre">copy()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Delete a file</td>
+<td><a class="reference internal" href="#hbp_archive.File.delete" title="hbp_archive.File.delete"><code class="xref py py-meth docutils literal"><span class="pre">delete()</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Get size of file</td>
+<td><a class="reference internal" href="#hbp_archive.File.size" title="hbp_archive.File.size"><code class="xref py py-meth docutils literal"><span class="pre">size()</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="hbp_archive.File.download">
+<code class="descname">download</code><span class="sig-paren">(</span><em>local_directory</em>, <em>with_tree=True</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#File.download"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.File.download" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download this file to a local directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>local_directory</strong> (<em>string</em>) &#8211; Local directory path where file is to be saved.</li>
+<li><strong>with_tree</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; Specify if directory structure of file is to be retained.</li>
+<li><strong>overwrite</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; Specify if any already existing file should be overwritten.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.File.read">
+<code class="descname">read</code><span class="sig-paren">(</span><em>decode='utf-8'</em>, <em>accept=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#File.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.File.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read and return the contents of this file in the container.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>file_path</strong> (<em>string</em>) &#8211; Path of file to be retrieved.</li>
+<li><strong>decode</strong> (<em>string</em><em>, </em><em>optional</em>) &#8211; Files containing text will be decoded using specified encoding
+(default: &#8216;utf-8&#8217;). To prevent any attempt at decoding, set <cite>decode=False</cite>.</li>
+<li><strong>accept</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; To force decoding, put the expected content type in <cite>accept</cite>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.File.move">
+<code class="descname">move</code><span class="sig-paren">(</span><em>target_directory</em>, <em>new_name=None</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#File.move"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.File.move" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move this file to the specified directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>target_directory</strong> (<em>string</em>) &#8211; Target directory where the file is to be moved.</li>
+<li><strong>new_name</strong> (<em>string</em><em>, </em><em>optional</em>) &#8211; New name to be assigned to file (including extension, if any).</li>
+<li><strong>overwrite</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; Specify if any already existing file should be overwritten.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.File.rename">
+<code class="descname">rename</code><span class="sig-paren">(</span><em>new_name</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#File.rename"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.File.rename" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rename this file within the source directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>new_name</strong> (<em>string</em>) &#8211; New name to be assigned to file (including extension, if any).</li>
+<li><strong>overwrite</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; Specify if any already existing file should be overwritten.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.File.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><em>target_directory</em>, <em>new_name=None</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#File.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.File.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy this file to specified directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>target_directory</strong> (<em>string</em>) &#8211; Target directory where the file is to be copied.</li>
+<li><strong>new_name</strong> (<em>string</em><em>, </em><em>optional</em>) &#8211; New name to be assigned to file (including extension, if any).</li>
+<li><strong>overwrite</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; Specify if any already existing file at target location should be overwritten.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.File.delete">
+<code class="descname">delete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#File.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.File.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete this file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.File.size">
+<code class="descname">size</code><span class="sig-paren">(</span><em>units='bytes'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#File.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.File.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the size of this file in the requested unit (default bytes).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>units</strong> (<em>string</em>) &#8211; Requested units for output.
+Options: &#8216;bytes&#8217; (default), &#8216;kB&#8217;, &#8216;MB&#8217;, &#8216;GB&#8217;, &#8216;TB&#8217;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="container">
+<h2>Container<a class="headerlink" href="#container" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hbp_archive.Container">
+<em class="property">class </em><code class="descclassname">hbp_archive.</code><code class="descname">Container</code><span class="sig-paren">(</span><em>container</em>, <em>username</em>, <em>token=None</em>, <em>project=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container" title="Permalink to this definition">¶</a></dt>
+<dd><p>A representation of a CSCS storage container. Can be used to operate both
+public and private CSCS containers. A CSCS account is needed to use this class.</p>
+<p>The following actions can be performed:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Action</th>
+<th class="head">Method</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>List all files in container</td>
+<td><a class="reference internal" href="#hbp_archive.Container.list" title="hbp_archive.Container.list"><code class="xref py py-meth docutils literal"><span class="pre">list()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Return a file from given path</td>
+<td><a class="reference internal" href="#hbp_archive.Container.get" title="hbp_archive.Container.get"><code class="xref py py-meth docutils literal"><span class="pre">get()</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Get number of files in container</td>
+<td><a class="reference internal" href="#hbp_archive.Container.count" title="hbp_archive.Container.count"><code class="xref py py-meth docutils literal"><span class="pre">count()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Get total size of data in container</td>
+<td><a class="reference internal" href="#hbp_archive.Container.size" title="hbp_archive.Container.size"><code class="xref py py-meth docutils literal"><span class="pre">size()</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Upload file(s) to container</td>
+<td><a class="reference internal" href="#hbp_archive.Container.upload" title="hbp_archive.Container.upload"><code class="xref py py-meth docutils literal"><span class="pre">upload()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Download a file from container</td>
+<td><a class="reference internal" href="#hbp_archive.Container.download" title="hbp_archive.Container.download"><code class="xref py py-meth docutils literal"><span class="pre">download()</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Read contents of file in container</td>
+<td><a class="reference internal" href="#hbp_archive.Container.read" title="hbp_archive.Container.read"><code class="xref py py-meth docutils literal"><span class="pre">read()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Copy a file in container</td>
+<td><a class="reference internal" href="#hbp_archive.Container.copy" title="hbp_archive.Container.copy"><code class="xref py py-meth docutils literal"><span class="pre">copy()</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Move a file in container</td>
+<td><a class="reference internal" href="#hbp_archive.Container.move" title="hbp_archive.Container.move"><code class="xref py py-meth docutils literal"><span class="pre">move()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Delete a file in container</td>
+<td><a class="reference internal" href="#hbp_archive.Container.delete" title="hbp_archive.Container.delete"><code class="xref py py-meth docutils literal"><span class="pre">delete()</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Copy a directory in container</td>
+<td><a class="reference internal" href="#hbp_archive.Container.copy_directory" title="hbp_archive.Container.copy_directory"><code class="xref py py-meth docutils literal"><span class="pre">copy_directory()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Move a directory in container</td>
+<td><a class="reference internal" href="#hbp_archive.Container.move_directory" title="hbp_archive.Container.move_directory"><code class="xref py py-meth docutils literal"><span class="pre">move_directory()</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Delete a directory  in container</td>
+<td><a class="reference internal" href="#hbp_archive.Container.delete_directory" title="hbp_archive.Container.delete_directory"><code class="xref py py-meth docutils literal"><span class="pre">delete_directory()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>List users with access to container</td>
+<td><a class="reference internal" href="#hbp_archive.Container.access_control" title="hbp_archive.Container.access_control"><code class="xref py py-meth docutils literal"><span class="pre">access_control()</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Grant container access to user</td>
+<td><a class="reference internal" href="#hbp_archive.Container.grant_access" title="hbp_archive.Container.grant_access"><code class="xref py py-meth docutils literal"><span class="pre">grant_access()</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="hbp_archive.Container.metadata">
+<code class="descname">metadata</code><a class="headerlink" href="#hbp_archive.Container.metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Metadata about the container</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.list">
+<code class="descname">list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.list" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all files in the container.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>file_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a File object for the file at the given path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file_path</strong> (<em>string</em>) &#8211; Path of file to be retrieved.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.count">
+<code class="descname">count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of files in the container</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.size">
+<code class="descname">size</code><span class="sig-paren">(</span><em>units='bytes'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total size of all data in the container</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>units</strong> (<em>string</em>) &#8211; Requested units for output.
+Options: &#8216;bytes&#8217; (default), &#8216;kB&#8217;, &#8216;MB&#8217;, &#8216;GB&#8217;, &#8216;TB&#8217;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.upload">
+<code class="descname">upload</code><span class="sig-paren">(</span><em>local_paths</em>, <em>remote_directory=''</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.upload"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.upload" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upload file(s) to the container.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>local_paths</strong> (<em>string</em><em>, </em><em>list of strings</em>) &#8211; Local path of file(s) to be uploaded.</li>
+<li><strong>remote_directory</strong> (<em>string</em><em>, </em><em>optional</em>) &#8211; Remote directory path where data is to be uploaded. Default is root directory.</li>
+<li><strong>overwrite</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; Specify if any already existing file at target should be overwritten.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Using the command-line &#8220;swift upload&#8221; will likely be faster since
+it uses a pool of threads to perform multiple uploads in parallel.
+It is thus recommended for bulk uploads.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.download">
+<code class="descname">download</code><span class="sig-paren">(</span><em>file_path</em>, <em>local_directory='.'</em>, <em>with_tree=True</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.download"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.download" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download a file from the container.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>file_path</strong> (<em>string</em>) &#8211; Path of file to be downloaded.</li>
+<li><strong>local_directory</strong> (<em>string</em><em>, </em><em>optional</em>) &#8211; Local directory path where file is to be saved.</li>
+<li><strong>with_tree</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; Specify if directory structure of file is to be retained.</li>
+<li><strong>overwrite</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; Specify if any already existing file should be overwritten.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.read">
+<code class="descname">read</code><span class="sig-paren">(</span><em>file_path</em>, <em>decode='utf-8'</em>, <em>accept=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read and return the contents of a file in the container.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>file_path</strong> (<em>string</em>) &#8211; Path of file to be retrieved.</li>
+<li><strong>decode</strong> (<em>string</em><em>, </em><em>optional</em>) &#8211; Files containing text will be decoded using specified encoding
+(default: &#8216;utf-8&#8217;). To prevent any attempt at decoding, set <cite>decode=False</cite>.</li>
+<li><strong>accept</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; To force decoding, put the expected content type in <cite>accept</cite>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><em>file_path</em>, <em>target_directory</em>, <em>new_name=None</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Copy a file to the specified directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>file_path</strong> (<em>string</em>) &#8211; Path of file to be copied.</li>
+<li><strong>target_directory</strong> (<em>string</em>) &#8211; Target directory where the file is to be copied.</li>
+<li><strong>new_name</strong> (<em>string</em><em>, </em><em>optional</em>) &#8211; New name to be assigned to file (including extension, if any).</li>
+<li><strong>overwrite</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; Specify if any already existing file should be overwritten.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.move">
+<code class="descname">move</code><span class="sig-paren">(</span><em>file_path</em>, <em>target_directory</em>, <em>new_name=None</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.move"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.move" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move a file to the specified directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>file_path</strong> (<em>string</em>) &#8211; Path of file to be moved.</li>
+<li><strong>target_directory</strong> (<em>string</em>) &#8211; Target directory where the file is to be moved.</li>
+<li><strong>new_name</strong> (<em>string</em><em>, </em><em>optional</em>) &#8211; New name to be assigned to file (including extension, if any).</li>
+<li><strong>overwrite</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; Specify if any already existing file should be overwritten.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.delete">
+<code class="descname">delete</code><span class="sig-paren">(</span><em>file_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the specified file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file_path</strong> (<em>string</em>) &#8211; Path of file to be deleted.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.copy_directory">
+<code class="descname">copy_directory</code><span class="sig-paren">(</span><em>directory_path</em>, <em>target_directory</em>, <em>new_name=None</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.copy_directory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.copy_directory" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Copy a directory to the specified directory location.</dt>
+<dd>The original tree structure of the directory will be maintained at
+the target location.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>directory_path</strong> (<em>string</em>) &#8211; Path of directory to be copied.</li>
+<li><strong>target_directory</strong> (<em>string</em>) &#8211; Path of target directory where specified directory is to be copied.</li>
+<li><strong>new_name</strong> (<em>string</em><em>, </em><em>optional</em>) &#8211; New name to be assigned to directory.</li>
+<li><strong>overwrite</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; Specify if any already existing files at target location should be
+overwritten. If False (default value), then only non-conflicting
+files will be copied over.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.move_directory">
+<code class="descname">move_directory</code><span class="sig-paren">(</span><em>directory_path</em>, <em>target_directory</em>, <em>new_name=None</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.move_directory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.move_directory" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Move a directory to the specified directory location.</dt>
+<dd>Can also be used to rename a directory.
+The original tree structure of the directory will be maintained at
+the target location.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>directory_path</strong> (<em>string</em>) &#8211; Path of directory to be copied.</li>
+<li><strong>target_directory</strong> (<em>string</em>) &#8211; Path of target directory where specified directory is to be copied.</li>
+<li><strong>new_name</strong> (<em>string</em><em>, </em><em>optional</em>) &#8211; New name to be assigned to directory.</li>
+<li><strong>overwrite</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; Specify if any already existing files at target location should be
+overwritten. If False (default value), then only non-conflicting
+files will be copied over.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.delete_directory">
+<code class="descname">delete_directory</code><span class="sig-paren">(</span><em>directory_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.delete_directory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.delete_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete the specified directory (and its contents).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>directory_path</strong> (<em>string</em>) &#8211; Path of directory to be deleted.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.access_control">
+<code class="descname">access_control</code><span class="sig-paren">(</span><em>show_usernames=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.access_control"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.access_control" title="Permalink to this definition">¶</a></dt>
+<dd><p>List the users that have access to this container.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>show_usernames</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; default is <cite>True</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Container.grant_access">
+<code class="descname">grant_access</code><span class="sig-paren">(</span><em>username</em>, <em>mode='read'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Container.grant_access"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Container.grant_access" title="Permalink to this definition">¶</a></dt>
+<dd><p>Give read or write access to the given user.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>username</strong> (<em>string</em>) &#8211; username of user to be granted access</li>
+<li><strong>mode</strong> (<em>string</em><em>, </em><em>optional</em>) &#8211; the access permission to be granted; default = &#8216;read&#8217;</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Use restricted to Superusers/Operators.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="publiccontainer">
+<h2>PublicContainer<a class="headerlink" href="#publiccontainer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hbp_archive.PublicContainer">
+<em class="property">class </em><code class="descclassname">hbp_archive.</code><code class="descname">PublicContainer</code><span class="sig-paren">(</span><em>url</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#PublicContainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.PublicContainer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A representation of a public CSCS storage container. Can be used to operate
+only public CSCS containers. A CSCS account is not needed to use this class.</p>
+<p>The following actions can be performed:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Action</th>
+<th class="head">Method</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>List all files in container</td>
+<td><a class="reference internal" href="#hbp_archive.PublicContainer.list" title="hbp_archive.PublicContainer.list"><code class="xref py py-meth docutils literal"><span class="pre">list()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Return a file from given path</td>
+<td><a class="reference internal" href="#hbp_archive.PublicContainer.get" title="hbp_archive.PublicContainer.get"><code class="xref py py-meth docutils literal"><span class="pre">get()</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Get number of files in container</td>
+<td><a class="reference internal" href="#hbp_archive.PublicContainer.count" title="hbp_archive.PublicContainer.count"><code class="xref py py-meth docutils literal"><span class="pre">count()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Get total size of data in container</td>
+<td><a class="reference internal" href="#hbp_archive.PublicContainer.size" title="hbp_archive.PublicContainer.size"><code class="xref py py-meth docutils literal"><span class="pre">size()</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Download a file from container</td>
+<td><a class="reference internal" href="#hbp_archive.PublicContainer.download" title="hbp_archive.PublicContainer.download"><code class="xref py py-meth docutils literal"><span class="pre">download()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Read contents of file in container</td>
+<td><a class="reference internal" href="#hbp_archive.PublicContainer.read" title="hbp_archive.PublicContainer.read"><code class="xref py py-meth docutils literal"><span class="pre">read()</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This class only permits read-only operations. For other features,
+you may access a public container via the <a class="reference internal" href="#hbp_archive.Container" title="hbp_archive.Container"><code class="xref py py-class docutils literal"><span class="pre">Container</span></code></a> class.</p>
+</div>
+<dl class="method">
+<dt id="hbp_archive.PublicContainer.list">
+<code class="descname">list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#PublicContainer.list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.PublicContainer.list" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all files in the container.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.PublicContainer.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>file_path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#PublicContainer.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.PublicContainer.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a File object for the file at the given path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>file_path</strong> (<em>string</em>) &#8211; Path of file to be retrieved.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.PublicContainer.count">
+<code class="descname">count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#PublicContainer.count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.PublicContainer.count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of files in the container</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.PublicContainer.size">
+<code class="descname">size</code><span class="sig-paren">(</span><em>units='bytes'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#PublicContainer.size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.PublicContainer.size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Total size of all data in the container</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>units</strong> (<em>string</em>) &#8211; Requested units for output.
+Options: &#8216;bytes&#8217; (default), &#8216;kB&#8217;, &#8216;MB&#8217;, &#8216;GB&#8217;, &#8216;TB&#8217;</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.PublicContainer.download">
+<code class="descname">download</code><span class="sig-paren">(</span><em>file_path</em>, <em>local_directory='.'</em>, <em>with_tree=True</em>, <em>overwrite=False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#PublicContainer.download"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.PublicContainer.download" title="Permalink to this definition">¶</a></dt>
+<dd><p>Download a file from the container.</p>
+<dl class="docutils">
+<dt>file_path</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">string</span><dd>Path of file to be downloaded.</dd>
+<dt>local_directory</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">string, optional</span><dd>Local directory path where file is to be saved.</dd>
+<dt>with_tree</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">boolean, optional</span><dd>Specify if directory structure of file is to be retained.</dd>
+<dt>overwrite</dt>
+ <span class="classifier-delimiter">:</span> <span class="classifier">boolean, optional</span><dd>Specify if any already existing file should be overwritten.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.PublicContainer.read">
+<code class="descname">read</code><span class="sig-paren">(</span><em>file_path</em>, <em>decode='utf-8'</em>, <em>accept=[]</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#PublicContainer.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.PublicContainer.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read and return the contents of a file in the container.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>file_path</strong> (<em>string</em>) &#8211; Path of file to be retrieved.</li>
+<li><strong>decode</strong> (<em>string</em><em>, </em><em>optional</em>) &#8211; Files containing text will be decoded using specified encoding
+(default: &#8216;utf-8&#8217;). To prevent any attempt at decoding, set <cite>decode=False</cite>.</li>
+<li><strong>accept</strong> (<em>boolean</em><em>, </em><em>optional</em>) &#8211; To force decoding, put the expected content type in <cite>accept</cite>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="project">
+<h2>Project<a class="headerlink" href="#project" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hbp_archive.Project">
+<em class="property">class </em><code class="descclassname">hbp_archive.</code><code class="descname">Project</code><span class="sig-paren">(</span><em>project</em>, <em>username</em>, <em>token=None</em>, <em>archive=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Project" title="Permalink to this definition">¶</a></dt>
+<dd><p>A representation of a CSCS Project.</p>
+<p>The following actions can be performed:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Action</th>
+<th class="head">Method / Property</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>Get a container from project</td>
+<td><a class="reference internal" href="#hbp_archive.Project.get_container" title="hbp_archive.Project.get_container"><code class="xref py py-meth docutils literal"><span class="pre">get_container()</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>List containers that you can access</td>
+<td><a class="reference internal" href="#hbp_archive.Project.containers" title="hbp_archive.Project.containers"><code class="xref py py-attr docutils literal"><span class="pre">containers</span></code></a></td>
+</tr>
+<tr class="row-even"><td>Get names of containers in project</td>
+<td><a class="reference internal" href="#hbp_archive.Project.container_names" title="hbp_archive.Project.container_names"><code class="xref py py-attr docutils literal"><span class="pre">container_names</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Get mapping of usernames to user ids</td>
+<td><a class="reference internal" href="#hbp_archive.Project.users" title="hbp_archive.Project.users"><code class="xref py py-attr docutils literal"><span class="pre">users</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="hbp_archive.Project.get_container">
+<code class="descname">get_container</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Project.get_container"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Project.get_container" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a container from project</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>string</em>) &#8211; name of the container to be retrieved</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hbp_archive.Project.containers">
+<code class="descname">containers</code><a class="headerlink" href="#hbp_archive.Project.containers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Containers you have access to in this project.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hbp_archive.Project.container_names">
+<code class="descname">container_names</code><a class="headerlink" href="#hbp_archive.Project.container_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of container names</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hbp_archive.Project.users">
+<code class="descname">users</code><a class="headerlink" href="#hbp_archive.Project.users" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a mapping from usernames to user ids</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="archive">
+<h2>Archive<a class="headerlink" href="#archive" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="hbp_archive.Archive">
+<em class="property">class </em><code class="descclassname">hbp_archive.</code><code class="descname">Archive</code><span class="sig-paren">(</span><em>username</em>, <em>token=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Archive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Archive" title="Permalink to this definition">¶</a></dt>
+<dd><p>A representation of the Human Brain Project archival storage
+(Pollux SWIFT) at CSCS.</p>
+<p>The following actions can be performed:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Action</th>
+<th class="head">Method / Property</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>List projects that you can access</td>
+<td><a class="reference internal" href="#hbp_archive.Archive.projects" title="hbp_archive.Archive.projects"><code class="xref py py-attr docutils literal"><span class="pre">projects</span></code></a></td>
+</tr>
+<tr class="row-odd"><td>Search for container in all projects</td>
+<td><a class="reference internal" href="#hbp_archive.Archive.find_container" title="hbp_archive.Archive.find_container"><code class="xref py py-meth docutils literal"><span class="pre">find_container()</span></code></a></td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="hbp_archive.Archive.projects">
+<code class="descname">projects</code><a class="headerlink" href="#hbp_archive.Archive.projects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Projects you have access to</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hbp_archive.Archive.find_container">
+<code class="descname">find_container</code><span class="sig-paren">(</span><em>container</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hbp_archive.html#Archive.find_container"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hbp_archive.Archive.find_container" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search through all projects for the container with the given name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>string</em>) &#8211; name of the container to be searched</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Requested <cite>Container</cite> object. If not found, Exception raised.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><cite>Container</cite></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to hbp_archive&#8217;s documentation!</a><ul>
+<li><a class="reference internal" href="#example-usage">Example Usage</a></li>
+<li><a class="reference internal" href="#regarding-cscs-authentication">Regarding CSCS Authentication</a></li>
+<li><a class="reference internal" href="#file">File</a></li>
+<li><a class="reference internal" href="#container">Container</a></li>
+<li><a class="reference internal" href="#publiccontainer">PublicContainer</a></li>
+<li><a class="reference internal" href="#project">Project</a></li>
+<li><a class="reference internal" href="#archive">Archive</a></li>
+</ul>
+</li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">hbp_archive 0.6.0 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2018, Andrew Davison and Shailesh Appukuttan.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.1.
+    </div>
+  </body>
+</html>
