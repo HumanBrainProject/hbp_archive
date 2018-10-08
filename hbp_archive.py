@@ -617,9 +617,9 @@ class Container(object):
         ----------
         username : string
             username of user to be granted access;
-            set to 'PUBLIC' for assigning '.r:*', '.rlistings' permissions
+            set to 'PUBLIC' to give public read-only access (no password required)
         mode : string, optional
-            the access permission to be granted; default = 'read'
+            the access permission to be granted: 'read'/'write'; default = 'read'
 
         Note
         ----
@@ -652,9 +652,9 @@ class Container(object):
         ----------
         username : string
             username of user to be revoked access;
-            set to 'PUBLIC' for revoking '.r:*', '.rlistings' permissions
+            set to 'PUBLIC' to make a container private
         mode : string, optional
-            the access permission to be revoked; default = 'read'
+            the access permission to be revoked: 'read'/'write'; default = 'read'
 
         Note
         ----
