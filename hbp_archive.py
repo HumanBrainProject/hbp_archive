@@ -264,6 +264,7 @@ class Container(object):
     Delete a directory  in container       :meth:`delete_directory`
     List users with access to container    :meth:`access_control`
     Grant container access to user         :meth:`grant_access`
+    Revoke container access from user      :meth:`revoke_access`
     ====================================   ====================================
     """
 
@@ -615,21 +616,71 @@ class Container(object):
         Parameters
         ----------
         username : string
-            username of user to be granted access
+            username of user to be granted access;
+            set to 'PUBLIC' to give public read-only access (no password required)
         mode : string, optional
-            the access permission to be granted; default = 'read'
+            the access permission to be granted: 'read'/'write'; default = 'read'
 
         Note
         ----
         Use restricted to Superusers/Operators.
         """
-        name_map = {v: k for k, v in self.project.users.items()}
-        user_id = name_map[username]
-        new_acl = self.access_control(show_usernames=False)[
-            mode] + ["{}:{}".format(self.project.id, user_id)]
-        headers = {"x-container-{}".format(mode): ",".join(new_acl)}
-        response = self.project._connection.post_container(self.name, headers)
-        self._metadata = None  # needs to be refreshed
+        if username == "PUBLIC":
+            mode = 'read'
+        current_acl = self.access_control(show_usernames=True)[mode]
+        if username in current_acl:
+            logging.info("User {} already has {} access to this container!".format(username, mode))
+        else:
+            if username == "PUBLIC":
+                new_acl = self.access_control(show_usernames=False)[
+                    mode] + ['.r:*', '.rlistings']
+            else:
+                name_map = {v: k for k, v in self.project.users.items()}
+                user_id = name_map[username]
+                new_acl = self.access_control(show_usernames=False)[
+                    mode] + ["{}:{}".format(self.project.id, user_id)]
+            headers = {"x-container-{}".format(mode): ",".join(new_acl)}
+            response = self.project._connection.post_container(self.name, headers)
+            self._metadata = None  # needs to be refreshed
+            logging.info("User {} has been granted {} access to this container.".format(username, mode))
+
+    def revoke_access(self, username, mode='read'):
+        """
+        Remove read or write access from the given user.
+
+        Parameters
+        ----------
+        username : string
+            username of user to be revoked access;
+            set to 'PUBLIC' to make a container private
+        mode : string, optional
+            the access permission to be revoked: 'read'/'write'; default = 'read'
+
+        Note
+        ----
+        Use restricted to Superusers/Operators.
+        """
+        if username == "PUBLIC":
+            mode = 'read'
+        current_acl = self.access_control(show_usernames=True)[mode]
+        if username not in current_acl:
+            logging.info("User {} does not have {} access to this container!".format(username, mode))
+        else:
+            acl = self.access_control(show_usernames=False)[mode]
+            if username == "PUBLIC":
+                acl.remove('.r:*')
+                acl.remove('.rlistings')
+            else:
+                name_map = {v: k for k, v in self.project.users.items()}
+                user_id = name_map[username]
+                for item in acl:
+                    if item.endswith(":{}".format(user_id)):
+                        acl.remove(item)
+            headers = {"x-container-{}".format(mode): ",".join(acl)}
+            response = self.project._connection.post_container(self.name, headers)
+            self._metadata = None  # needs to be refreshed
+            logging.info("User {} has been revoked {} access to this container.".format(username, mode))
+
 
 
 class PublicContainer(object):  # todo: figure out inheritance relationship with Container
