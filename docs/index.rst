@@ -53,3 +53,8 @@ Archive
 ===============
 .. autoclass:: Archive
    :members:
+
+Misc
+===============
+.. autofunction:: scale_bytes
+.. autofunction:: set_logger
