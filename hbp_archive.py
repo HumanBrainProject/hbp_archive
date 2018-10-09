@@ -114,6 +114,8 @@ class File(object):
     ====================================   ====================================
     Action                                 Method
     ====================================   ====================================
+    Get directory name                     :attr:`dirname`
+    Get file name                          :attr:`basename`
     Download a file                        :meth:`download`
     Read contents of a file                :meth:`read`
     Move a file                            :meth:`move`
@@ -140,10 +142,24 @@ class File(object):
 
     @property
     def dirname(self):
+        """Returns the directory name from file path.
+
+        Returns
+        -------
+        string
+             Directory path of file.
+        """
         return os.path.dirname(self.name)
 
     @property
     def basename(self):
+        """Returns the file name from file path.
+
+        Returns
+        -------
+        string
+             Name of file.
+        """
         return os.path.basename(self.name)
 
     def download(self, local_directory, with_tree=True, overwrite=False):
@@ -157,6 +173,11 @@ class File(object):
             Specify if directory structure of file is to be retained.
         overwrite : boolean, optional
             Specify if any already existing file should be overwritten.
+
+        Returns
+        -------
+        string
+             Path of file created inside specified local directory.
         """
         if self.container:
             self.container.download(self.name, local_directory=local_directory, with_tree=with_tree, overwrite=overwrite)
@@ -175,6 +196,11 @@ class File(object):
             (default: 'utf-8'). To prevent any attempt at decoding, set `decode=False`.
         accept : boolean, optional
             To force decoding, put the expected content type in `accept`.
+
+        Returns
+        -------
+        string (unicode)
+            Contents of the specified file.
         """
         if self.container:
             return self.container.read(self.name, decode=decode, accept=accept)
@@ -236,6 +262,11 @@ class File(object):
         units : string
             Requested units for output.
             Options: 'bytes' (default), 'kB', 'MB', 'GB', 'TB'
+
+        Returns
+        -------
+        float
+            Size of specified file in requested units.
         """
         return scale_bytes(self.bytes, units)
 
@@ -249,6 +280,7 @@ class Container(object):
     ====================================   ====================================
     Action                                 Method
     ====================================   ====================================
+    Get metadata about the container       :attr:`metadata`
     List all files in container            :meth:`list`
     Return a file from given path          :meth:`get`
     Get number of files in container       :meth:`count`
@@ -287,13 +319,25 @@ class Container(object):
 
     @property
     def metadata(self):
-        """Metadata about the container"""
+        """Metadata about the container.
+
+        Returns
+        -------
+        dict
+            Dictionary with metadata about the container.
+        """
         if self._metadata is None:
             self._metadata = self.project._connection.head_container(self.name)
         return self._metadata
 
     def list(self):  # , content_type=None, newer_than=None, older_than=None):
-        """List all files in the container."""
+        """List all files in the container.
+
+        Returns
+        -------
+        list
+            List of `hbp_archive.File` objects existing in container.
+        """
         self._metadata, contents = self.project._connection.get_container(self.name)
         return [File(container=self, **item) for item in contents]
 
@@ -304,6 +348,11 @@ class Container(object):
         ----------
         file_path : string
             Path of file to be retrieved.
+
+        Returns
+        -------
+        `hbp_archive.File`
+            Requested `hbp_archive.File` object from container.
         """
         for f in self.list():  # very inefficient
             if f.name == file_path:
@@ -311,7 +360,13 @@ class Container(object):
         raise ValueError("Path '{}' does not exist".format(file_path))
 
     def count(self):
-        """Number of files in the container"""
+        """Number of files in the container
+
+        Returns
+        -------
+        int
+            Count of number of files in the container.
+        """
         return int(self.metadata['x-container-object-count'])
 
     def size(self, units='bytes'):
@@ -322,6 +377,11 @@ class Container(object):
         units : string
             Requested units for output.
             Options: 'bytes' (default), 'kB', 'MB', 'GB', 'TB'
+
+        Returns
+        -------
+        float
+            Total size of all data in the container in requested units.
         """
         return scale_bytes(int(self.metadata['x-container-bytes-used']), units)
 
@@ -337,6 +397,11 @@ class Container(object):
         overwrite : boolean, optional
             Specify if any already existing file at target should be overwritten.
 
+        Returns
+        -------
+        list
+            List of strings indicating file paths created on container.
+
         Note
         ----
         Using the command-line "swift upload" will likely be faster since
@@ -347,17 +412,11 @@ class Container(object):
             local_paths = [local_paths]
         remote_paths = []
 
+        contents = [f.name for f in self.list()]
         for path in local_paths:
             remote_path = os.path.join(remote_directory, os.path.basename(path))
-            if not overwrite:
-                try:
-                    res = self.project._connection.head_object(self.name, remote_path)
-                    raise IOError("Target file path already exists! Set `overwrite=True` to overwrite file.")
-                except IOError as e:            # if file already exists
-                    logging.error("File: {} not uploaded. Reason: {}".format(path, e))
-                    return
-                except ClientException as e:    # if file does not exist
-                    pass
+            if not overwrite and remote_path in contents:
+                raise Exception("Target file path '{}' already exists! Set `overwrite=True` to overwrite file.".format(remote_path))
             with open(path, 'rb') as f:
                 file_data = f.read()
                 self.project._connection.put_object(self.name, remote_path, file_data)
@@ -377,6 +436,11 @@ class Container(object):
             Specify if directory structure of file is to be retained.
         overwrite : boolean, optional
             Specify if any already existing file should be overwritten.
+
+        Returns
+        -------
+        string
+             Path of file created inside specified local directory.
         """
         # todo: allow file_path to be a File object
         headers, contents = self.project._connection.get_object(self.name, file_path)
@@ -386,7 +450,7 @@ class Container(object):
         Path(local_directory).mkdir(parents=True, exist_ok=True)
         local_path = os.path.join(local_directory, os.path.basename(file_path))
         if not overwrite and os.path.exists(local_path):
-            raise IOError("Destination file ({}) already exists! Set `overwrite=True` to overwrite file.".format(local_path))
+            raise IOError("Destination file '{}' already exists! Set `overwrite=True` to overwrite file.".format(local_path))
         with open(local_path, "wb") as local:
             local.write(contents)
         return local_path
@@ -404,6 +468,11 @@ class Container(object):
             (default: 'utf-8'). To prevent any attempt at decoding, set `decode=False`.
         accept : boolean, optional
             To force decoding, put the expected content type in `accept`.
+
+        Returns
+        -------
+        string (unicode)
+            Contents of the specified file.
         """
         text_content_types = ["application/json", ]
         headers, contents = self.project._connection.get_object(self.name, file_path)
@@ -431,20 +500,15 @@ class Container(object):
         """
         if not new_name:
             new_name = os.path.basename(file_path)
-        if not overwrite:
-            try:
-                res = self.project._connection.head_object(self.name, os.path.join(target_directory, new_name))
-                raise IOError("Target file path already exists! Set `overwrite=True` to overwrite file.")
-            except IOError as e:
-                logging.error(e)
-                return
-            except ClientException as e:
-                pass
-        try:
-            self.project._connection.copy_object(self.name, file_path, destination=os.path.join(self.name, target_directory, new_name))
-            logging.info("Successfully copied the object")
-        except ClientException as e:
-            logging.info("Failed to copy the object with error: %s" % e)
+
+        contents = [f.name for f in self.list()]
+        path = os.path.join(target_directory, new_name)
+        if file_path not in contents:
+            raise Exception("Source file path '{}' does not exist!".format(file_path))
+        if not overwrite and path in contents:
+            raise Exception("Target file path '{}' already exists! Set `overwrite=True` to overwrite file.".format(path))
+        self.project._connection.copy_object(self.name, file_path, destination=os.path.join(self.name, path))
+        logging.info("Successfully copied the object")
 
     def move(self, file_path, target_directory, new_name=None, overwrite=False):
         """Move a file to the specified directory.
@@ -462,24 +526,18 @@ class Container(object):
         """
         if not new_name:
             new_name = os.path.basename(file_path)
-        if not overwrite:
-            try:
-                res = self.project._connection.head_object(self.name, os.path.join(target_directory, new_name))
-                raise IOError("Target file path already exists! Set `overwrite=True` to overwrite file.")
-            except IOError as e:
-                logging.error(e)
-                return
-            except ClientException as e:
-                pass
-        try:
-            self.project._connection.copy_object(self.name, file_path, destination=os.path.join(self.name, target_directory, new_name))
-            self.project._connection.delete_object(self.name, file_path)
-            if os.path.dirname(file_path) == target_directory:
-                logging.info("Successfully renamed the object")
-            else:
-                logging.info("Successfully moved the object")
-        except ClientException as e:
-            logging.error("Failed to move/rename the object with error: %s" % e)
+        contents = [f.name for f in self.list()]
+        path = os.path.join(target_directory, new_name)
+        if file_path not in contents:
+            raise Exception("Source file path '{}' does not exist!".format(file_path))
+        if not overwrite and path in contents:
+            raise Exception("Target file path '{}' already exists! Set `overwrite=True` to overwrite file.".format(path))
+        self.project._connection.copy_object(self.name, file_path, destination=os.path.join(self.name, path))
+        self.project._connection.delete_object(self.name, file_path)
+        if os.path.dirname(file_path) == target_directory:
+            logging.info("Successfully renamed the object")
+        else:
+            logging.info("Successfully moved the object")
 
     def delete(self, file_path):
         """Delete the specified file.
@@ -489,11 +547,21 @@ class Container(object):
         file_path : string
             Path of file to be deleted.
         """
-        try:
+        # For some inexplicable reason, in some cases the file does not get
+        # deleted after executing this the first time. In these cases, we need
+        # to repeat this operation to delete the file. It would thus be wise
+        # to verify if the file is actually deleted or not, before proceeding.
+        contents = [f.name for f in self.list()]
+        if file_path not in contents:
+            raise Exception("Specified file path '{}' does not exist!".format(file_path))
+        ctr = 0
+        while ctr<5 and file_path in contents:
             self.project._connection.delete_object(self.name, file_path)
+            contents = [f.name for f in self.list()]
+        if file_path in contents:
+            raise Exception("Unable to delete the file '{}'".format(file_path))
+        else:
             logging.info("Successfully deleted the object")
-        except ClientException as e:
-            logging.error("Failed to delete the object with error: %s" % e)
 
     def copy_directory(self, directory_path, target_directory, new_name=None, overwrite=False):
         """Copy a directory to the specified directory location.
@@ -520,7 +588,7 @@ class Container(object):
         all_files = self.list()
         dir_files = [f for f in all_files if f.name.startswith(directory_path)]
         if not dir_files:
-            raise Exception("Specified directory does not exist in this container!")
+            raise Exception("Specified directory '{}' does not exist in this container!".format(directory_path[:-1]))
         else:
             logging.info("***** Directory Copy Details *****")
             for f in dir_files:
@@ -553,7 +621,7 @@ class Container(object):
         all_files = self.list()
         dir_files = [f for f in all_files if f.name.startswith(directory_path)]
         if not dir_files:
-            raise Exception("Specified directory does not exist in this container!")
+            raise Exception("Specified directory '{}' does not exist in this container!".format(directory_path[:-1]))
         else:
             logging.info("***** Directory Move Details *****")
             for f in dir_files:
@@ -573,7 +641,7 @@ class Container(object):
         all_files = self.list()
         dir_files = [f for f in all_files if f.name.startswith(directory_path)]
         if not dir_files:
-            raise Exception("Specified directory does not exist in this container!")
+            raise Exception("Specified directory '{}' does not exist in this container!".format(directory_path[:-1]))
         else:
             logging.info("***** Directory Delete Details *****")
             for f in dir_files:
@@ -587,6 +655,12 @@ class Container(object):
         ----------
         show_usernames : boolean, optional
             default is `True`
+
+        Returns
+        -------
+        dict
+            Dictionary with keys 'read' and 'write'; each having a value in the
+            form of a list of usernames
         """
         acl = {}
         for key in ("read", "write"):
@@ -719,7 +793,13 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
         return "PublicContainer('{}')".format(self.url)
 
     def list(self):  # todo: allow refreshing, in case contents have changed
-        """List all files in the container."""
+        """List all files in the container.
+
+        Returns
+        -------
+        list
+            List of `hbp_archive.File` objects existing in container.
+        """
         if self._content_list is None:
             response = requests.get(self.url, headers={"Accept": "application/json"})
             if response.ok:
@@ -735,6 +815,11 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
         ----------
         file_path : string
             Path of file to be retrieved.
+
+        Returns
+        -------
+        `hbp_archive.File`
+            Requested `hbp_archive.File` object from container.
         """
         for f in self.list():  # very inefficient
             if f.name == file_path:
@@ -742,17 +827,28 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
         raise ValueError("Path '{}' does not exist".format(file_path))
 
     def count(self):
-        """Number of files in the container"""
+        """Number of files in the container.
+
+        Returns
+        -------
+        int
+            Count of number of files in the container.
+        """
         return len(self.list())
 
     def size(self, units='bytes'):
-        """Total size of all data in the container
+        """Total size of all data in the container.
 
         Parameters
         ----------
         units : string
             Requested units for output.
             Options: 'bytes' (default), 'kB', 'MB', 'GB', 'TB'
+
+        Returns
+        -------
+        float
+            Total size of all data in the container in requested units.
         """
         total_bytes = sum(f.bytes for f in self.list())
         return scale_bytes(total_bytes, units)
@@ -768,6 +864,11 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
             Specify if directory structure of file is to be retained.
         overwrite : boolean, optional
             Specify if any already existing file should be overwritten.
+
+        Returns
+        -------
+        string
+             Path of file created inside specified local directory.
         """
         # todo: allow file_path to be a File object
         # todo: implement direct streaming to file without
@@ -802,6 +903,11 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
             (default: 'utf-8'). To prevent any attempt at decoding, set `decode=False`.
         accept : boolean, optional
             To force decoding, put the expected content type in `accept`.
+
+        Returns
+        -------
+        string (unicode)
+            Contents of the specified file.
         """
         text_content_types = ["application/json", ]
         response = requests.get(self.url + "/" + file_path)
@@ -877,12 +983,17 @@ class Project(object):
         return containers
 
     def get_container(self, name):
-        """Get a container from project
+        """Get a container from project.
 
         Parameters
         ----------
         name : string
-            name of the container to be retrieved
+            name of the container to be retrieved.
+
+        Returns
+        -------
+        'hbp_archive.Container'
+            Requested Container object from Project.
         """
         if name not in self.containers:
             container = Container(name, self.archive.username, project=self)
@@ -892,7 +1003,14 @@ class Project(object):
 
     @property
     def containers(self):
-        """Containers you have access to in this project."""
+        """Containers you have access to in this project.
+
+        Returns
+        -------
+        dict
+            Dictionary with keys as names of containers and their values being
+            the corresponding 'hbp_archive.Container' object.
+        """
         if self._containers is None:
             self._containers = {name: Container(name, username=self.archive.username, project=self)
                                 for name in self.container_names if not name.endswith("_versions")}
@@ -900,12 +1018,24 @@ class Project(object):
 
     @property
     def container_names(self):
-        """Returns a list of container names"""
+        """Returns a list of container names
+
+        Returns
+        -------
+        list
+            List of strings indicating container names in Project.
+        """
         return [item['name'] for item in self._get_container_info()]
 
     @property
     def users(self):
-        """Return a mapping from usernames to user ids"""
+        """Return a mapping from usernames to user ids
+
+        Returns
+        -------
+        dict
+            dict of mapping from usernames to user ids.
+        """
         if self._user_id_map is None:
             self._user_id_map = {}
             proj_info = self.containers.get('project_info', None)
@@ -965,7 +1095,14 @@ class Archive(object):
 
     @property
     def projects(self):
-        """Projects you have access to"""
+        """Projects you have access to.
+
+        Returns
+        -------
+        dict
+            Dictionary with keys as names of projects and their values being
+            the corresponding 'hbp_archive.Project' object.
+        """
         if self._projects is None:
             self._projects = {ksprj_name: Project(ksprj_name, username=self.username, archive=self)
                               for ksprj_name in self._ks_projects}
@@ -982,8 +1119,8 @@ class Archive(object):
 
         Returns
         -------
-        `Container`
-            Requested `Container` object. If not found, Exception raised.
+        'hbp_archive.Container'
+            Requested Container object from Project.
         """
         for project in self.projects.values():
             try:
