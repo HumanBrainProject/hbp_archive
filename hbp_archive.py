@@ -98,7 +98,7 @@ def scale_bytes(value, units):
 
     Parameters
     ----------
-    value : float
+    value : int
         Value (in bytes) to be converted.
     units : string
         Requested units for output.
