@@ -69,6 +69,7 @@ Example Usage
 from __future__ import division
 import getpass
 import os
+import sys
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
 from keystoneauth1.exceptions.auth import AuthorizationFailure
@@ -89,10 +90,25 @@ OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
 OS_IDENTITY_PROVIDER_URL = 'https://kc.cscs.ch/auth/realms/cscs/protocol/saml/'
 
+logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
 logger = logging.getLogger("hbp_archive")
 
 def scale_bytes(value, units):
-    """Convert a value in bytes to a different unit"""
+    """Convert a value in bytes to a different unit.
+
+    Parameters
+    ----------
+    value : int
+        Value (in bytes) to be converted.
+    units : string
+        Requested units for output.
+        Options: 'bytes', 'kB', 'MB', 'GB', 'TB'
+
+    Returns
+    -------
+    float
+        Value in requested units.
+    """
     allowed_units = {
         'bytes': 1,
         'kB': 1024,
@@ -104,6 +120,36 @@ def scale_bytes(value, units):
         raise ValueError("Units must be one of {}".format(list(allowed_units.keys())))
     scale = allowed_units[units]
     return value / scale
+
+def set_logger(location="screen", level="INFO"):
+    """Set the logging specifications for this module.
+
+    Parameters
+    ----------
+    location : string / None, optional
+        Can be set to following options:
+        - 'screen' (case insensitive; default) : display log messages on screen
+        - None : disable logging
+        - Any other input will be considered as filename for logging to a file
+    level : string, option
+        Specify the logging level.
+        Options: 'DEBUG'/'INFO'/'WARNING'/'ERROR'/'CRITICAL'
+    """
+    # Remove all existing handlers
+    for handler in logger.root.handlers[:]:
+        logger.root.removeHandler(handler)
+    if location and level not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
+        raise Exception("level should be specified as: 'DEBUG'/'INFO'/'WARNING'/'ERROR'/'CRITICAL'")
+    if not location:
+        logger.disabled = True
+    else:
+        logger.disabled = False
+        if location.lower() == "screen":
+            logging.basicConfig(stream=sys.stdout, level=eval("logging.{}".format(level)))
+        else:
+            if not location.endswith(".log"):
+                location = location + ".log"
+            logging.basicConfig(filename=location, level=eval("logging.{}".format(level)))
 
 
 class File(object):
@@ -508,7 +554,7 @@ class Container(object):
         if not overwrite and path in contents:
             raise Exception("Target file path '{}' already exists! Set `overwrite=True` to overwrite file.".format(path))
         self.project._connection.copy_object(self.name, file_path, destination=os.path.join(self.name, path))
-        logging.info("Successfully copied the object")
+        logger.info("Successfully copied the object")
 
     def move(self, file_path, target_directory, new_name=None, overwrite=False):
         """Move a file to the specified directory.
@@ -535,9 +581,9 @@ class Container(object):
         self.project._connection.copy_object(self.name, file_path, destination=os.path.join(self.name, path))
         self.project._connection.delete_object(self.name, file_path)
         if os.path.dirname(file_path) == target_directory:
-            logging.info("Successfully renamed the object")
+            logger.info("Successfully renamed the object")
         else:
-            logging.info("Successfully moved the object")
+            logger.info("Successfully moved the object")
 
     def delete(self, file_path):
         """Delete the specified file.
@@ -561,7 +607,7 @@ class Container(object):
         if file_path in contents:
             raise Exception("Unable to delete the file '{}'".format(file_path))
         else:
-            logging.info("Successfully deleted the object")
+            logger.info("Successfully deleted the object")
 
     def copy_directory(self, directory_path, target_directory, new_name=None, overwrite=False):
         """Copy a directory to the specified directory location.
@@ -590,9 +636,9 @@ class Container(object):
         if not dir_files:
             raise Exception("Specified directory '{}' does not exist in this container!".format(directory_path[:-1]))
         else:
-            logging.info("***** Directory Copy Details *****")
+            logger.info("***** Directory Copy Details *****")
             for f in dir_files:
-                logging.info("Filename: {}".format(f.name))
+                logger.info("Filename: {}".format(f.name))
                 self.copy(f.name, os.path.join(target_directory, new_name), overwrite=overwrite)
 
     def move_directory(self, directory_path, target_directory, new_name=None, overwrite=False):
@@ -623,9 +669,9 @@ class Container(object):
         if not dir_files:
             raise Exception("Specified directory '{}' does not exist in this container!".format(directory_path[:-1]))
         else:
-            logging.info("***** Directory Move Details *****")
+            logger.info("***** Directory Move Details *****")
             for f in dir_files:
-                logging.info("Filename: {}".format(f.name))
+                logger.info("Filename: {}".format(f.name))
                 self.move(f.name, os.path.join(target_directory, new_name), overwrite=overwrite)
 
     def delete_directory(self, directory_path):
@@ -643,9 +689,9 @@ class Container(object):
         if not dir_files:
             raise Exception("Specified directory '{}' does not exist in this container!".format(directory_path[:-1]))
         else:
-            logging.info("***** Directory Delete Details *****")
+            logger.info("***** Directory Delete Details *****")
             for f in dir_files:
-                logging.info("Filename: {}".format(f.name))
+                logger.info("Filename: {}".format(f.name))
                 self.delete(f.name)
 
     def access_control(self, show_usernames=True):
@@ -703,7 +749,7 @@ class Container(object):
             mode = 'read'
         current_acl = self.access_control(show_usernames=True)[mode]
         if username in current_acl:
-            logging.info("User {} already has {} access to this container!".format(username, mode))
+            logger.info("User {} already has {} access to this container!".format(username, mode))
         else:
             if username == "PUBLIC":
                 new_acl = self.access_control(show_usernames=False)[
@@ -716,7 +762,7 @@ class Container(object):
             headers = {"x-container-{}".format(mode): ",".join(new_acl)}
             response = self.project._connection.post_container(self.name, headers)
             self._metadata = None  # needs to be refreshed
-            logging.info("User {} has been granted {} access to this container.".format(username, mode))
+            logger.info("User {} has been granted {} access to this container.".format(username, mode))
 
     def revoke_access(self, username, mode='read'):
         """
@@ -738,7 +784,7 @@ class Container(object):
             mode = 'read'
         current_acl = self.access_control(show_usernames=True)[mode]
         if username not in current_acl:
-            logging.info("User {} does not have {} access to this container!".format(username, mode))
+            logger.info("User {} does not have {} access to this container!".format(username, mode))
         else:
             acl = self.access_control(show_usernames=False)[mode]
             if username == "PUBLIC":
@@ -753,7 +799,7 @@ class Container(object):
             headers = {"x-container-{}".format(mode): ",".join(acl)}
             response = self.project._connection.post_container(self.name, headers)
             self._metadata = None  # needs to be refreshed
-            logging.info("User {} has been revoked {} access to this container.".format(username, mode))
+            logger.info("User {} has been revoked {} access to this container.".format(username, mode))
 
 
 
@@ -1095,7 +1141,7 @@ class Archive(object):
 
     @property
     def projects(self):
-        """Projects you have access to.
+        """Projects you have access to
 
         Returns
         -------
