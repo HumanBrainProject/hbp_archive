@@ -1,6 +1,6 @@
 A high-level API for interacting with the Human Brain Project archival storage at CSCS.
 
-Author: Andrew Davison and Shailesh Appukuttan, CNRS
+Authors: Andrew Davison and Shailesh Appukuttan, CNRS
 
 Documentation: https://hbp-archive.readthedocs.io
 

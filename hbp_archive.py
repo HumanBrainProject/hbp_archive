@@ -20,6 +20,13 @@ Author: Andrew Davison and Shailesh Appukuttan, CNRS
 
 License: Apache License, Version 2.0, see LICENSE.txt
 
+Documentation: https://hbp-archive.readthedocs.io
+
+Installation::
+
+    pip install hbp_archive
+
+
 Example Usage
 =============
 
