@@ -4,6 +4,8 @@ Author: Andrew Davison and Shailesh Appukuttan, CNRS
 
 Documentation: https://hbp-archive.readthedocs.io
 
+Installation: `pip install hbp_archive`
+
 Usage:
 
 ```python
