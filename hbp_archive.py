@@ -334,6 +334,7 @@ class Container(object):
     Action                                 Method
     ====================================   ====================================
     Get metadata about the container       :attr:`metadata`
+    Get url if container is public         :attr:`public_url`
     List all files in container            :meth:`list`
     Return a file from given path          :meth:`get`
     Get number of files in container       :meth:`count`
@@ -382,6 +383,20 @@ class Container(object):
         if self._metadata is None:
             self._metadata = self.project._connection.head_container(self.name)
         return self._metadata
+
+    @property
+    def public_url(self):
+        """Get url if container is public.
+
+        Returns
+        -------
+        string
+            URL to access public container; returns None for private containers.
+        """
+        if "PUBLIC" in self.access_control()["read"]:
+            return "https://object.cscs.ch/v1/AUTH_{self.project.id}/{self.name}".format(self=self)
+        else:
+            return None
 
     def list(self):  # , content_type=None, newer_than=None, older_than=None):
         """List all files in the container.
