@@ -394,10 +394,9 @@ class Container(object):
             URL to access public container; returns None for private containers.
         """
         if "PUBLIC" in self.access_control()["read"]:
-            self._public_url = str("https://object.cscs.ch/v1/AUTH_" + self.project.id +"/" + self.name)
+            return "https://object.cscs.ch/v1/AUTH_{self.project.id}/{self.name}".format(self=self)
         else:
-            self._public_url = None
-        return self._public_url
+            return None
 
     def list(self):  # , content_type=None, newer_than=None, older_than=None):
         """List all files in the container.
