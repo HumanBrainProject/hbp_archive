@@ -394,7 +394,7 @@ class Container(object):
             URL to access public container; returns None for private containers.
         """
         if "PUBLIC" in self.access_control()["read"]:
-            self._public_url = str("https://object.cscs.ch/v1/AUTH_" + self.project.id +"/hippocampus_optimization")
+            self._public_url = str("https://object.cscs.ch/v1/AUTH_" + self.project.id +"/" + self.name)
         else:
             self._public_url = None
         return self._public_url
