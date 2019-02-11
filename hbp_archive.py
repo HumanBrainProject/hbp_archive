@@ -90,6 +90,10 @@ except ImportError:
     from pathlib2 import Path  # Python 2 backport
 import requests
 import logging
+try:
+    raw_input
+except NameError:  # Python 3
+    raw_input = input
 
 __version__ = "0.6.0"
 
@@ -621,7 +625,7 @@ class Container(object):
         # to verify if the file is actually deleted or not, before proceeding.
         contents = [f.name for f in self.list()]
         if file_path not in contents:
-            raise Exception("Specified file path '{}' does not exist!".format(file_path))
+            raise Exception("Specified file path {} does not exist!".format(file_path))
         ctr = 0
         while ctr<5 and file_path in contents:
             self.project._connection.delete_object(self.name, file_path)
@@ -824,7 +828,6 @@ class Container(object):
             logger.info("User {} has been revoked {} access to this container.".format(username, mode))
 
 
-
 class PublicContainer(object):  # todo: figure out inheritance relationship with Container
     """A representation of a public CSCS storage container. Can be used to operate
     only public CSCS containers. A CSCS account is not needed to use this class.
@@ -1004,6 +1007,9 @@ class Project(object):
     ====================================   ====================================
     Action                                 Method / Property
     ====================================   ====================================
+    Create a container inside project      :meth:`create_container`
+    Rename a container inside project      :meth:`rename_container`
+    Delete a container inside project      :meth:`delete_container`
     Get a container from project           :meth:`get_container`
     List containers that you can access    :attr:`containers`
     Get names of containers in project     :attr:`container_names`
@@ -1049,6 +1055,70 @@ class Project(object):
         except ClientException:
             containers = []
         return containers
+
+    def create_container(self, container_name, public=False):
+        """
+        Create a container inside the current project
+
+        Parameters
+        ----------
+        container_name : string
+            name to be assigned to container
+        public : boolean, optional
+            specify if container is to be made public; default is private
+
+        Note
+        ----
+        Use restricted to Superusers/Operators.
+        """
+        if container_name in self.container_names:
+            raise Exception("Container named '{}' already exists!".format(container_name))
+        self._connection.put_container(container_name) # doesn't return anything on success
+        if public:
+            c = self.get_container(container_name)
+            c.grant_access("PUBLIC")
+        logger.info("Successfully created the container named '{}'".format(container_name))
+
+    def rename_container(self):
+        """
+        Rename a container inside the current project
+
+        Note
+        ----
+        Use restricted to Superusers/Operators.
+        """
+        raise NotImplementedError("It is not possible to directly rename a container."
+            "\nSee 'https://bugs.launchpad.net/swift/+bug/1231540' for more details."
+            "\nWorkaround: copy contents of existing container to a new container "
+            "(with desired name) and then delete the old container.")
+
+    def delete_container(self, container_name):
+        """
+        Delete a container from the current project
+
+        Parameters
+        ----------
+        container_name : string
+            name of container to be deleted
+
+        Note
+        ----
+        Use restricted to Superusers/Operators.
+        """
+        if container_name not in self.container_names:
+            raise Exception("Container named '{}' does not exist, or you don't have access to it!".format(container_name))
+        c = self.get_container(container_name)
+        print("Are you sure you wish to delete the container named '{}' containing '{}' item(s)?".format(container_name, c.count()))
+        print("If yes, type in the name of the container to proceed. Any other input will cancel this operation.")
+        c_name = raw_input("Input: ")
+        if c_name != container_name:
+            logger.info("Operation cancelled. Container '{}' is NOT deleted.".format(container_name))
+            return
+        items = c.list()
+        for item in items:
+            c.delete(item.name)
+        self._connection.delete_container(container_name) # doesn't return anything on success
+        logger.info("Successfully deleted the container named '{}'. '{}' item(s) deleted.".format(container_name, c.count()))
 
     def get_container(self, name):
         """Get a container from project.
