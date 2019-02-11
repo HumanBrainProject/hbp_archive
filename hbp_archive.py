@@ -1058,7 +1058,7 @@ class Project(object):
         """
         if container_name in self.container_names:
             raise Exception("Container named '{}' already exists!".format(container_name))
-        response = self._connection.put_container(container_name)
+        self._connection.put_container(container_name) # doesn't return anything on success
         if public:
             c = self.get_container(container_name)
             c.grant_access("PUBLIC")
@@ -1077,7 +1077,7 @@ class Project(object):
             "\nWorkaround: copy contents of existing container to a new container "
             "(with desired name) and then delete the old container.")
 
-    def delete_container(self, container_name, prompt=True):
+    def delete_container(self, container_name):
         """
         Delete a container from the current project
 
@@ -1085,8 +1085,6 @@ class Project(object):
         ----------
         container_name : string
             name of container to be deleted
-        prompt : boolean, optional
-            prompt the user for confirmation before deletion; default is enabled
 
         Note
         ----
@@ -1095,17 +1093,16 @@ class Project(object):
         if container_name not in self.container_names:
             raise Exception("Container named '{}' does not exist, or you don't have access to it!".format(container_name))
         c = self.get_container(container_name)
-        if prompt:
-            print("Are you sure you wish to delete the container named '{}' containing '{}' item(s)?".format(container_name, c.count()))
-            print("If yes, type in the name of the container to proceed. Any other input will cancel this operation.")
-            c_name = raw_input("Input: ")
-            if c_name != container_name:
-                logger.info("Operation cancelled. Container '{}' is NOT deleted.".format(container_name))
-                return
+        print("Are you sure you wish to delete the container named '{}' containing '{}' item(s)?".format(container_name, c.count()))
+        print("If yes, type in the name of the container to proceed. Any other input will cancel this operation.")
+        c_name = raw_input("Input: ")
+        if c_name != container_name:
+            logger.info("Operation cancelled. Container '{}' is NOT deleted.".format(container_name))
+            return
         items = c.list()
         for item in items:
             c.delete(item.name)
-        response = self._connection.delete_container(container_name)
+        self._connection.delete_container(container_name) # doesn't return anything on success
         logger.info("Successfully deleted the container named '{}'. '{}' item(s) deleted.".format(container_name, c.count()))
 
     def get_container(self, name):
