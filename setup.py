@@ -18,7 +18,7 @@ setup(
     author='Andrew P. Davison and Shailesh Appukuttan, CNRS',
     author_email='andrew.davison@unic.cnrs-gif.fr',
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering',
         'License :: OSI Approved :: Apache Software License',
@@ -28,6 +28,7 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7'
     ],
     keywords='swift hbp cscs data',
     py_modules=["hbp_archive"],
