@@ -95,11 +95,11 @@ try:
 except NameError:  # Python 3
     raw_input = input
 
-__version__ = "0.6.0"
+__version__ = "0.8.1"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
-OS_IDENTITY_PROVIDER_URL = 'https://kc.cscs.ch/auth/realms/cscs/protocol/saml/'
+OS_IDENTITY_PROVIDER_URL = 'https://auth.cscs.ch/auth/realms/cscs/protocol/saml/'
 
 logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
 logger = logging.getLogger("hbp_archive")
