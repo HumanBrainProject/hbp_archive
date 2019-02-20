@@ -95,7 +95,7 @@ try:
 except NameError:  # Python 3
     raw_input = input
 
-__version__ = "0.7.1"
+__version__ = "0.8.1"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
