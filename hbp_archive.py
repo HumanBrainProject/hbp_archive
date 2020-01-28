@@ -945,7 +945,7 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
         # todo: implement direct streaming to file without
         #       storing copy in memory, see for example
         #       https://stackoverflow.com/questions/13137817/how-to-download-image-using-requests
-        response = requests.get(self.url + "/" + file_path)
+        response = requests.get(self.url + file_path)
         if response.ok:
             contents = response.content
         else:
@@ -981,7 +981,7 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
             Contents of the specified file.
         """
         text_content_types = ["application/json", ]
-        response = requests.get(self.url + "/" + file_path)
+        response = requests.get(self.url + file_path)
         if response.ok:
             contents = response.content
             headers = response.headers
