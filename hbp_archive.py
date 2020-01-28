@@ -77,6 +77,7 @@ from __future__ import division
 import getpass
 import os
 import sys
+from datetime import datetime
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
 from keystoneauth1.exceptions.auth import AuthorizationFailure
@@ -190,6 +191,7 @@ class File(object):
         self.hash = hash
         self.last_modified = last_modified
         self.container = container
+        self.path = os.path.join(container.public_url, name) if container.public_url else name
 
     def __str__(self):
         return "'{}'".format(self.name)
@@ -402,8 +404,21 @@ class Container(object):
         else:
             return None
 
-    def list(self):  # , content_type=None, newer_than=None, older_than=None):
+    def list(self, content_type=None, newer_than=None, older_than=None, contains_substring=None, extension=None):
         """List all files in the container.
+
+        Parameters
+        ----------
+        content_type : string
+            content_type of files to be listed.
+        newer_than : datetime
+            start timestamp for files to be listed.
+        older_than : datetime
+            end timestamp for files to be listed.
+        contains_substring : string
+            substring to be matched for files to be listed.
+        extension : string
+            extension to be matched for files to be listed.
 
         Returns
         -------
@@ -411,7 +426,18 @@ class Container(object):
             List of `hbp_archive.File` objects existing in container.
         """
         self._metadata, contents = self.project._connection.get_container(self.name)
-        return [File(container=self, **item) for item in contents]
+        contents = [File(container=self, **item) for item in contents]
+        if content_type:
+            contents = [item for item in contents if item.content_type==content_type]
+        if newer_than and isinstance(newer_than, datetime):
+            contents = [item for item in contents if datetime.strptime(item.last_modified, '%Y-%m-%dT%H:%M:%S.%f') >= newer_than]
+        if older_than and isinstance(older_than, datetime):
+            contents = [item for item in contents if datetime.strptime(item.last_modified, '%Y-%m-%dT%H:%M:%S.%f') <= older_than]
+        if contains_substring:
+            contents = [item for item in contents if contains_substring in item.name]
+        if extension:
+            contents = [item for item in contents if item.name.endswith(extension)]
+        return contents
 
     def get(self, file_path):
         """Return a File object for the file at the given path.
@@ -852,16 +878,16 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
     """
 
     def __init__(self, url):
-        self.url = url
+        self.public_url = url
         self.name = url.split("/")[-1]
         self.project = None
         self._content_list = None
 
     def __str__(self):
-        return self.url
+        return self.public_url
 
     def __repr__(self):
-        return "PublicContainer('{}')".format(self.url)
+        return "PublicContainer('{}')".format(self.public_url)
 
     def list(self):  # todo: allow refreshing, in case contents have changed
         """List all files in the container.
@@ -872,7 +898,7 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
             List of `hbp_archive.File` objects existing in container.
         """
         if self._content_list is None:
-            response = requests.get(self.url, headers={"Accept": "application/json"})
+            response = requests.get(self.public_url, headers={"Accept": "application/json"})
             if response.ok:
                 self._content_list = [File(container=self, **entry) for entry in response.json()]
             else:
