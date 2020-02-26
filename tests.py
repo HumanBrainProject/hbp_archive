@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2018 CNRS
+# Copyright (c) 2017-2020 CNRS
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,9 +34,9 @@ class ArchiveTest(TestCase):
         cls.arch = Archive(username)
 
     def test_project_list(self):
-        projects = self.arch.projects
-        self.assertEqual(sorted([p.name for p in projects.values()]),
-                         ["bp0", "bp00sp01", "bp00sp06"])
+        project_names = [p.name for p in self.arch.projects.values()]
+        for expected_name in ["bp0", "bp00sp01", "bp00sp06"]:
+            self.assertIn(expected_name, project_names)
 
     def test_find_container(self):
         container_name = "sp6_validation_data"
@@ -115,7 +115,7 @@ class ContainerTest(TestCase):
         expected_local_path = os.path.abspath(os.path.join(tmp_testdir, test_filename))
         if os.path.exists(expected_local_path):
             os.remove(expected_local_path)
-        
+
         local_path = self.container.download(test_filename, local_directory=tmp_testdir)
         self.assertEqual(local_path, expected_local_path)
         self.assert_(os.path.exists(local_path))
@@ -168,7 +168,7 @@ class PublicContainerTest(TestCase):
         expected_local_path = os.path.abspath(os.path.join(tmp_testdir, test_filename))
         if os.path.exists(expected_local_path):
             os.remove(expected_local_path)
-        
+
         local_path = self.container.download(test_filename, local_directory=tmp_testdir)
         self.assertEqual(local_path, expected_local_path)
         self.assert_(os.path.exists(local_path))

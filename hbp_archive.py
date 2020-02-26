@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2018 CNRS
+# Copyright (c) 2017-2020 CNRS
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ try:
 except NameError:  # Python 3
     raw_input = input
 
-__version__ = "0.8.1"
+__version__ = "0.9.0"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
@@ -515,9 +515,8 @@ class Container(object):
             remote_path = os.path.join(remote_directory, os.path.basename(path))
             if not overwrite and remote_path in contents:
                 raise Exception("Target file path '{}' already exists! Set `overwrite=True` to overwrite file.".format(remote_path))
-            with open(path, 'rb') as f:
-                file_data = f.read()
-                self.project._connection.put_object(self.name, remote_path, file_data)
+            with open(path, 'rb') as file_obj:
+                self.project._connection.put_object(self.name, remote_path, file_obj)
                 remote_paths.append(remote_path)
         return remote_paths
 
