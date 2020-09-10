@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2018 CNRS
+# Copyright (c) 2017-2020 CNRS
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ try:
 except NameError:  # Python 3
     raw_input = input
 
-__version__ = "0.8.1"
+__version__ = "0.9.1"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
@@ -404,11 +404,13 @@ class Container(object):
         else:
             return None
 
-    def list(self, content_type=None, newer_than=None, older_than=None, contains_substring=None, extension=None):
+    def list(self, dir_path=None, content_type=None, newer_than=None, older_than=None, contains_substring=None, extension=None):
         """List all files in the container.
 
         Parameters
         ----------
+        dir_path : string
+            base directory of files to be listed, default is set to root directory.
         content_type : string
             content_type of files to be listed.
         newer_than : datetime
@@ -427,6 +429,10 @@ class Container(object):
         """
         self._metadata, contents = self.project._connection.get_container(self.name)
         contents = [File(container=self, **item) for item in contents]
+        if dir_path:
+            dir_path = dir_path[1:] if (dir_path[0] == "/") else dir_path
+            dir_path = dir_path if (dir_path[-1] == "/") else dir_path + "/"
+            contents = [item for item in contents if item.name.startswith(dir_path)]
         if content_type:
             contents = [item for item in contents if item.content_type==content_type]
         if newer_than and isinstance(newer_than, datetime):
@@ -515,9 +521,8 @@ class Container(object):
             remote_path = os.path.join(remote_directory, os.path.basename(path))
             if not overwrite and remote_path in contents:
                 raise Exception("Target file path '{}' already exists! Set `overwrite=True` to overwrite file.".format(remote_path))
-            with open(path, 'rb') as f:
-                file_data = f.read()
-                self.project._connection.put_object(self.name, remote_path, file_data)
+            with open(path, 'rb') as file_obj:
+                self.project._connection.put_object(self.name, remote_path, file_obj)
                 remote_paths.append(remote_path)
         return remote_paths
 
@@ -889,21 +894,54 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
     def __repr__(self):
         return "PublicContainer('{}')".format(self.public_url)
 
-    def list(self):  # todo: allow refreshing, in case contents have changed
+    def list(self, dir_path=None, content_type=None, newer_than=None, older_than=None, contains_substring=None, extension=None, refresh=False):
         """List all files in the container.
 
+        Parameters
+        ----------
+        dir_path : string
+            base directory of files to be listed, default is set to root directory.
+        content_type : string
+            content_type of files to be listed.
+        newer_than : datetime
+            start timestamp for files to be listed.
+        older_than : datetime
+            end timestamp for files to be listed.
+        contains_substring : string
+            substring to be matched for files to be listed.
+        extension : string
+            extension to be matched for files to be listed.
+        refresh : boolean
+            to force refreshing, in case contents have changed.
+        
         Returns
         -------
         list
             List of `hbp_archive.File` objects existing in container.
         """
-        if self._content_list is None:
+        if self._content_list is None or refresh:
             response = requests.get(self.public_url, headers={"Accept": "application/json"})
             if response.ok:
                 self._content_list = [File(container=self, **entry) for entry in response.json()]
             else:
                 raise Exception(response.content)
-        return self._content_list
+        
+        contents = self._content_list
+        if dir_path:
+            dir_path = dir_path[1:] if (dir_path[0] == "/") else dir_path
+            dir_path = dir_path if (dir_path[-1] == "/") else dir_path + "/"
+            contents = [item for item in contents if item.name.startswith(dir_path)]
+        if content_type:
+            contents = [item for item in contents if item.content_type==content_type]
+        if newer_than and isinstance(newer_than, datetime):
+            contents = [item for item in contents if datetime.strptime(item.last_modified, '%Y-%m-%dT%H:%M:%S.%f') >= newer_than]
+        if older_than and isinstance(older_than, datetime):
+            contents = [item for item in contents if datetime.strptime(item.last_modified, '%Y-%m-%dT%H:%M:%S.%f') <= older_than]
+        if contains_substring:
+            contents = [item for item in contents if contains_substring in item.name]
+        if extension:
+            contents = [item for item in contents if item.name.endswith(extension)]
+        return contents
 
     def get(self, file_path):
         """Return a File object for the file at the given path.
