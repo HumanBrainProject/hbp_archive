@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2020 CNRS
+# Copyright (c) 2017-2021 CNRS
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -96,7 +96,7 @@ try:
 except NameError:  # Python 3
     raw_input = input
 
-__version__ = "0.9.1"
+__version__ = "0.9.2"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
@@ -883,7 +883,7 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
     """
 
     def __init__(self, url):
-        self.public_url = url
+        self.public_url = self.url = url
         self.name = url.split("/")[-1]
         self.project = None
         self._content_list = None
@@ -913,7 +913,7 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
             extension to be matched for files to be listed.
         refresh : boolean
             to force refreshing, in case contents have changed.
-        
+
         Returns
         -------
         list
@@ -925,7 +925,7 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
                 self._content_list = [File(container=self, **entry) for entry in response.json()]
             else:
                 raise Exception(response.content)
-        
+
         contents = self._content_list
         if dir_path:
             dir_path = dir_path[1:] if (dir_path[0] == "/") else dir_path
@@ -1009,7 +1009,7 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
         # todo: implement direct streaming to file without
         #       storing copy in memory, see for example
         #       https://stackoverflow.com/questions/13137817/how-to-download-image-using-requests
-        response = requests.get(self.url + file_path)
+        response = requests.get(self.public_url + file_path)
         if response.ok:
             contents = response.content
         else:
@@ -1045,7 +1045,7 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
             Contents of the specified file.
         """
         text_content_types = ["application/json", ]
-        response = requests.get(self.url + file_path)
+        response = requests.get(self.public_url + file_path)
         if response.ok:
             contents = response.content
             headers = response.headers
