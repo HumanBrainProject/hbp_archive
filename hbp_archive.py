@@ -96,7 +96,7 @@ try:
 except NameError:  # Python 3
     raw_input = input
 
-__version__ = "0.9.2"
+__version__ = "0.9.3"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
@@ -883,8 +883,10 @@ class PublicContainer(object):  # todo: figure out inheritance relationship with
     """
 
     def __init__(self, url):
+        if url[-1] != "/":
+            url += "/"
         self.public_url = self.url = url
-        self.name = url.split("/")[-1]
+        self.name = url.split("/")[-2]
         self.project = None
         self._content_list = None
 
