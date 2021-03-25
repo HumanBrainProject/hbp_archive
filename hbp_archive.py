@@ -16,7 +16,7 @@
 """
 A high-level API for interacting with the Human Brain Project archival storage at CSCS.
 
-Author: Andrew Davison and Shailesh Appukuttan, CNRS
+Author: Andrew Davison (CNRS), Shailesh Appukuttan (CNRS) and Eszter Agnes Papp (University of Oslo)
 
 License: Apache License, Version 2.0, see LICENSE.txt
 
@@ -96,7 +96,7 @@ try:
 except NameError:  # Python 3
     raw_input = input
 
-__version__ = "0.9.3"
+__version__ = "1.0.0"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
