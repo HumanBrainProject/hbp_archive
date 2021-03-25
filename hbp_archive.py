@@ -81,7 +81,7 @@ from datetime import datetime
 from keystoneauth1.identity import v3
 from keystoneauth1 import session
 from keystoneauth1.exceptions.auth import AuthorizationFailure
-from keystoneauth1.extras._saml2 import V3Saml2Password
+from keystoneauth1.identity import V3OidcPassword
 from keystoneclient.v3 import client as ksclient
 import swiftclient.client as swiftclient
 from swiftclient.exceptions import ClientException
@@ -100,7 +100,11 @@ __version__ = "0.9.3"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
-OS_IDENTITY_PROVIDER_URL = 'https://auth.cscs.ch/auth/realms/cscs/protocol/saml/'
+OS_PROTOCOL = 'openid'
+OS_INTERFACE = 'public'
+OS_DISCOVERY_ENDPOINT ='https://auth.cscs.ch/auth/realms/cscs/.well-known/openid-configuration'
+OS_CLIENT_ID = 'pollux-prod'
+OS_CLIENT_SECRET = '82c7a379-f5ee-48c7-8a6b-7ee15557e28e'
 
 logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
 logger = logging.getLogger("hbp_archive")
@@ -1278,15 +1282,18 @@ class Archive(object):
             pwd = os.environ.get('CSCS_PASS')
             if not pwd:
                 pwd = getpass.getpass("Password: ")
-            auth = V3Saml2Password(auth_url=OS_AUTH_URL,
-                                   identity_provider=OS_IDENTITY_PROVIDER,
-                                   protocol='mapped',
-                                   identity_provider_url=OS_IDENTITY_PROVIDER_URL,
-                                   username=username,
-                                   password=pwd)
+
+            auth = V3OidcPassword(auth_url=OS_AUTH_URL,
+                                  identity_provider=OS_IDENTITY_PROVIDER,
+                                  protocol=OS_PROTOCOL,
+                                  client_id=OS_CLIENT_ID,
+                                  client_secret=OS_CLIENT_SECRET,
+                                  discovery_endpoint=OS_DISCOVERY_ENDPOINT,
+                                  username=username,
+                                  password=pwd)
 
         self._session = session.Session(auth=auth)
-        self._client = ksclient.Client(session=self._session, interface='public')
+        self._client = ksclient.Client(session=self._session, interface=OS_INTERFACE)
         try:
             self.user_id = self._session.get_user_id()
         except AuthorizationFailure:
