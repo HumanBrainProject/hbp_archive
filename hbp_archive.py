@@ -100,7 +100,6 @@ __version__ = "0.9.3"
 
 OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
-OS_IDENTITY_PROVIDER_URL = 'https://auth.cscs.ch/auth/realms/cscs/protocol/saml/'
 OS_PROTOCOL = 'openid'
 OS_INTERFACE = 'public'
 OS_DISCOVERY_ENDPOINT ='https://auth.cscs.ch/auth/realms/cscs/.well-known/openid-configuration'
