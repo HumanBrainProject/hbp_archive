@@ -53,8 +53,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'hbp_archive'
-copyright = u'2018-2021, Andrew Davison and Shailesh Appukuttan'
-author = u'Andrew Davison and Shailesh Appukuttan'
+copyright = u'2018-2021, Andrew Davison (CNRS), Shailesh Appukuttan (CNRS) and Eszter Agnes Papp (University of Oslo)'
+author = u'Andrew Davison (CNRS), Shailesh Appukuttan (CNRS) and Eszter Agnes Papp (University of Oslo)'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

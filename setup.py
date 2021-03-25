@@ -15,7 +15,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url='https://github.com/HumanBrainProject/hbp_archive',
-    author='Andrew P. Davison and Shailesh Appukuttan, CNRS',
+    author='Andrew P. Davison (CNRS), Shailesh Appukuttan (CNRS), Eszter Agnes Papp (University of Oslo)',
     author_email='andrew.davison@cnrs.fr',
     classifiers=[
         'Development Status :: 4 - Beta',

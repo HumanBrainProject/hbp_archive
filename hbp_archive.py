@@ -16,7 +16,7 @@
 """
 A high-level API for interacting with the Human Brain Project archival storage at CSCS.
 
-Author: Andrew Davison and Shailesh Appukuttan, CNRS
+Author: Andrew Davison (CNRS), Shailesh Appukuttan (CNRS) and Eszter Agnes Papp (University of Oslo)
 
 License: Apache License, Version 2.0, see LICENSE.txt
 
