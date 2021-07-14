@@ -98,13 +98,13 @@ except NameError:  # Python 3
 
 __version__ = "1.0.0"
 
-OS_AUTH_URL = 'https://pollux.cscs.ch:13000/v3'
+OS_AUTH_URL = 'https://castor.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
 OS_PROTOCOL = 'openid'
 OS_INTERFACE = 'public'
 OS_DISCOVERY_ENDPOINT ='https://auth.cscs.ch/auth/realms/cscs/.well-known/openid-configuration'
-OS_CLIENT_ID = 'pollux-prod'
-OS_CLIENT_SECRET = '82c7a379-f5ee-48c7-8a6b-7ee15557e28e'
+OS_CLIENT_ID = 'castor'
+OS_CLIENT_SECRET = 'c6cc606a-5ae4-4e3e-8a19-753ad265f521'
 
 logging.basicConfig(stream=sys.stdout, level=logging.WARNING)
 logger = logging.getLogger("hbp_archive")
@@ -1262,7 +1262,7 @@ class Project(object):
 
 class Archive(object):
     """A representation of the Human Brain Project archival storage
-    (Pollux SWIFT) at CSCS.
+    (openstack swift) at CSCS.
 
     The following actions can be performed:
 
