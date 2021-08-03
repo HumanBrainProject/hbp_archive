@@ -96,7 +96,7 @@ try:
 except NameError:  # Python 3
     raw_input = input
 
-__version__ = "1.0.0"
+__version__ = "1.1.1"
 
 OS_AUTH_URL = 'https://castor.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
@@ -530,13 +530,13 @@ class Container(object):
                 remote_paths.append(remote_path)
         return remote_paths
 
-    def download(self, file_path, local_directory=".", with_tree=True, overwrite=False):
+    def download(self, file_paths, local_directory=".", with_tree=True, overwrite=False):
         """Download a file from the container.
 
         Parameters
         ----------
-        file_path : string
-            Path of file to be downloaded.
+        file_paths : string, list of strings
+            Path of file(s) to be downloaded.
         local_directory : string, optional
             Local directory path where file is to be saved.
         with_tree : boolean, optional
@@ -549,18 +549,25 @@ class Container(object):
         string
              Path of file created inside specified local directory.
         """
-        # todo: allow file_path to be a File object
-        headers, contents = self.project._connection.get_object(self.name, file_path)
-        if with_tree:
-            local_directory = os.path.join(os.path.abspath(local_directory),
-                                           *os.path.dirname(file_path).split("/"))
-        Path(local_directory).mkdir(parents=True, exist_ok=True)
-        local_path = os.path.join(local_directory, os.path.basename(file_path))
-        if not overwrite and os.path.exists(local_path):
-            raise IOError("Destination file '{}' already exists! Set `overwrite=True` to overwrite file.".format(local_path))
-        with open(local_path, "wb") as local:
-            local.write(contents)
-        return local_path
+        if isinstance(file_paths, str):
+            file_paths = [file_paths]
+        local_paths = []
+
+        for path in file_paths:
+            # todo: allow file_path to be a File object
+            headers, contents = self.project._connection.get_object(self.name, path)
+            if with_tree:
+                temp_local_directory = os.path.join(os.path.abspath(local_directory),
+                                            *os.path.dirname(path).split("/"))
+            Path(temp_local_directory).mkdir(parents=True, exist_ok=True)
+            local_path = os.path.join(temp_local_directory, os.path.basename(path))
+            if not overwrite and os.path.exists(local_path):
+                raise IOError("Destination file '{}' already exists! Set `overwrite=True` to overwrite file.".format(local_path))
+            with open(local_path, "wb") as local:
+                local.write(contents)
+                local_paths.append(local_path)
+
+        return local_paths
         # todo: check hash
 
     def read(self, file_path, decode='utf-8', accept=[]):
