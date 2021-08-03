@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='hbp_archive',
-    version='1.1.1',
+    version='1.0.1',
     description='A high-level API for interacting with the Human Brain Project archival storage at CSCS',
     long_description=long_description,
     long_description_content_type="text/markdown",

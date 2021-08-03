@@ -96,7 +96,7 @@ try:
 except NameError:  # Python 3
     raw_input = input
 
-__version__ = "1.1.1"
+__version__ = "1.0.1"
 
 OS_AUTH_URL = 'https://castor.cscs.ch:13000/v3'
 OS_IDENTITY_PROVIDER = 'cscskc'
