@@ -7,9 +7,15 @@
 Welcome to hbp_archive's documentation!
 =======================================
 
+.. warning::
+
+   The data stored during the Human Brain Project
+   are no longer accessible using this software. You should instead use the
+   `ebrains_storage <https://github.com/HumanBrainProject/ebrains-storage>`_ project to
+   access data through the EBRAINS Data Proxy (Bucket) API.
+
 .. toctree::
    :maxdepth: 2
-
 
 .. automodule:: hbp_archive
 

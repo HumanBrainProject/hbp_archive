@@ -1,4 +1,9 @@
-A high-level API for interacting with the Human Brain Project archival storage at CSCS.
+  This repository has been archived, as the data stored during the Human Brain Project
+  are no longer accessible using this software. You should instead use the
+  [`ebrains_storage`](https://github.com/HumanBrainProject/ebrains-storage) project to
+  access data through the EBRAINS Data Proxy (Bucket) API.
+
+## A high-level API for interacting with the Human Brain Project archival storage at CSCS.
 
 Authors: Andrew Davison (CNRS), Shailesh Appukuttan (CNRS) and Eszter Agnes Papp (University of Oslo)
 
